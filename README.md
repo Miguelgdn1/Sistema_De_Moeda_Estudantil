@@ -119,7 +119,7 @@ Para o desenvolvimento da interface, foi utilizada a paleta de cores:
 
 ### Diagrama de Componentes
 
-![Diagrama de Componentes](docs/Diagrama-de-Componentes.png)
+![Diagrama de Componentes](docs/Diagrama-de-ComponentesV2.png)
 
 
 ## Integrantes
