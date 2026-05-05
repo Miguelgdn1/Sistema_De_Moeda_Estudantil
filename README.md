@@ -124,13 +124,16 @@ Para o desenvolvimento da interface, foi utilizada a paleta de cores:
 
 ## Integrantes
 
- - Henrique Carvalho
- - João Pedro Moura Santos
- - Miguel Gomes
+[![GitHub](https://img.shields.io/badge/GitHub-Henrique_Carvalho-181717?logo=github)](https://github.com/henriquegdc)
+
+[![GitHub](https://img.shields.io/badge/GitHub-João_Pedro_Moura_Santos-181717?logo=github)](https://github.com/joaopedromourinhasantos)
+
+[![GitHub](https://img.shields.io/badge/GitHub-Miguel_Gomes-181717?logo=github)](https://github.com/Miguelgdn1)
 
 ## Professor Responsavel
 
-- Joao Paulo Carneiro Aramuni
+[![GitHub](https://img.shields.io/badge/GitHub-João_Paulo_Aramuni-181717?logo=github)](https://github.com/joaopauloaramuni)
+
 
 ## Licenca
 
