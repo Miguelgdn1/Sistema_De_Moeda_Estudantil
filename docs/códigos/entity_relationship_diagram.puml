@@ -1,0 +1,97 @@
+@startchen "Modelo ER - Sistema de Moeda Estudantil"
+
+' ===== Entidades =====
+
+entity Usuario {
+  id <<key>>
+  email
+  senhaHash
+}
+
+entity Aluno {
+  cpf <<key>>
+  rg
+  nome
+  endereco
+  curso
+  saldoMoedas
+}
+
+entity Professor {
+  cpf <<key>>
+  nome
+  departamento
+  saldoMoedas
+}
+
+entity EmpresaParceira {
+  cnpj <<key>>
+  nomeFantasia
+  descricao
+}
+
+entity Instituicao {
+  id <<key>>
+  nome
+  cnpj
+  endereco
+}
+
+entity Vantagem {
+  id <<key>>
+  nome
+  descricao
+  custoMoedas
+  fotoUrl
+}
+
+entity Transacao {
+  id <<key>>
+  tipo
+  quantidadeMoedas
+  dataHora
+  mensagem
+  codigoCupom
+}
+
+' ===== Generalização / Especialização =====
+relationship "É-Um" as ehUm {
+}
+Aluno -1- ehUm
+Professor -1- ehUm
+EmpresaParceira -1- ehUm
+ehUm -1- Usuario
+
+' ===== Relacionamentos =====
+
+relationship Matricula {
+}
+Aluno -N- Matricula
+Matricula -1- Instituicao
+
+relationship Vinculo {
+}
+Professor -N- Vinculo
+Vinculo -1- Instituicao
+
+relationship Oferece {
+}
+EmpresaParceira -1- Oferece
+Oferece -N- Vantagem
+
+relationship Envia {
+}
+Professor -1- Envia
+Envia -N- Transacao
+
+relationship Recebe {
+}
+Aluno -1- Recebe
+Recebe -N- Transacao
+
+relationship ResgataDe {
+}
+Vantagem -1- ResgataDe
+ResgataDe -N- Transacao
+
+@endchen

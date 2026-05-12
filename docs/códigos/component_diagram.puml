@@ -1,0 +1,130 @@
+@startuml
+
+' ===== Atores externos =====
+actor Aluno
+actor Professor
+actor "Empresa Parceira" as Empresa
+
+cloud "Internet" {
+    [Servidor SMTP] <<external>>
+}
+
+' ===== Frontend Angular =====
+package "Frontend Angular (porta 4200)" {
+    [Login] <<component>>
+    [CRUD Aluno] <<component>>
+    [CRUD Empresa] <<component>>
+    [Painel Aluno] <<component>>
+    [Painel Professor] <<component>>
+    [Painel Empresa] <<component>>
+
+    [AuthService] <<service>>
+    [AlunoService] <<service>>
+    [EmpresaService] <<service>>
+    [HttpInterceptor JWT] <<component>>
+
+    interface "REST API" as IRest
+    [AuthService] ..> IRest : requer
+    [AlunoService] ..> IRest : requer
+    [EmpresaService] ..> IRest : requer
+
+    [Login] --> [AuthService]
+    [CRUD Aluno] --> [AlunoService]
+    [CRUD Empresa] --> [EmpresaService]
+    [Painel Aluno] --> [AlunoService]
+    [Painel Professor] --> [AlunoService]
+    [Painel Empresa] --> [EmpresaService]
+
+    [AuthService] --> [HttpInterceptor JWT] : "anexa Bearer token"
+}
+
+' ===== Backend Micronaut =====
+package "Backend Micronaut (porta 8080)" {
+
+    package "Camada de Controllers" {
+        [AuthController] <<controller>>
+        [AlunoController] <<controller>>
+        [EmpresaController] <<controller>>
+        [InstituicaoController] <<controller>>
+
+        interface "REST API" as IRestProvider
+        [AuthController] o-- IRestProvider : fornece
+        [AlunoController] o-- IRestProvider : fornece
+        [EmpresaController] o-- IRestProvider : fornece
+        [InstituicaoController] o-- IRestProvider : fornece
+    }
+
+    package "Camada de Segurança" {
+        [JwtService] <<security>>
+        [PasswordEncoder] <<security>>
+        [SecurityFilter] <<security>>
+    }
+
+    package "Camada de Serviço" {
+        [AuthService BE] <<service>>
+        [AlunoService BE] <<service>>
+        [EmpresaService BE] <<service>>
+        [EmailService] <<service>>
+    }
+
+    package "Camada de Persistência (DAO + JPA)" {
+        [UsuarioDAO] <<dao>>
+        [AlunoDAO] <<dao>>
+        [EmpresaDAO] <<dao>>
+        [InstituicaoDAO] <<dao>>
+        [ProfessorDAO] <<dao>>
+        [VantagemDAO] <<dao>>
+        [TransacaoDAO] <<dao>>
+
+        [Hibernate / JPA] <<orm>>
+    }
+
+    [AuthController] --> [AuthService BE]
+    [AlunoController] --> [AlunoService BE]
+    [EmpresaController] --> [EmpresaService BE]
+    [InstituicaoController] --> [InstituicaoDAO]
+
+    [AuthController] --> [SecurityFilter]
+    [AlunoController] --> [SecurityFilter]
+    [EmpresaController] --> [SecurityFilter]
+    [SecurityFilter] --> [JwtService]
+
+    [AuthService BE] --> [UsuarioDAO]
+    [AuthService BE] --> [PasswordEncoder]
+    [AuthService BE] --> [JwtService]
+
+    [AlunoService BE] --> [AlunoDAO]
+    [AlunoService BE] --> [InstituicaoDAO]
+    [AlunoService BE] --> [PasswordEncoder]
+
+    [EmpresaService BE] --> [EmpresaDAO]
+    [EmpresaService BE] --> [PasswordEncoder]
+
+    [AlunoDAO] --> [Hibernate / JPA]
+    [EmpresaDAO] --> [Hibernate / JPA]
+    [UsuarioDAO] --> [Hibernate / JPA]
+    [InstituicaoDAO] --> [Hibernate / JPA]
+    [ProfessorDAO] --> [Hibernate / JPA]
+    [VantagemDAO] --> [Hibernate / JPA]
+    [TransacaoDAO] --> [Hibernate / JPA]
+}
+
+' ===== Banco de Dados =====
+package "PostgreSQL (porta 5432)" {
+    database "moedaestudantil" as DB
+}
+
+[Hibernate / JPA] --> DB : JDBC
+
+' ===== Integração externa =====
+[EmailService] --> [Servidor SMTP] : envia email
+
+' ===== Comunicação Frontend → Backend =====
+[HttpInterceptor JWT] --> IRestProvider : HTTPS/JSON
+
+' ===== Acesso dos atores =====
+Aluno --> [Login]
+Professor --> [Login]
+Empresa --> [Login]
+
+@enduml

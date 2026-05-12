@@ -1,0 +1,24 @@
+# Claude Code (local agent settings — não devem ser versionados)
+.claude/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs / arquivos temporários de debug
+*.log
+erro de comp.md
+
+# Build outputs (cada subprojeto já tem seu próprio .gitignore,
+# mas garantir aqui caso alguém rode na raiz)
+target/
+dist/
+build/
+
+# Dependências
+node_modules/

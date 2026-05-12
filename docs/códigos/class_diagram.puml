@@ -1,0 +1,96 @@
+@startuml
+
+' ===== Hierarquia de Usuários =====
+abstract class Usuario {
+    +id: Long
+    +email: String
+    +senhaHash: String
+    +autenticar(senha: String): boolean
+}
+
+class Aluno {
+    +cpf: String
+    +rg: String
+    +nome: String
+    +endereco: String
+    +curso: String
+    +saldoMoedas: int
+    +consultarExtrato(): List<Transacao>
+    +resgatarVantagem(v: Vantagem): Transacao
+}
+
+class Professor {
+    +cpf: String
+    +nome: String
+    +departamento: String
+    +saldoMoedas: int
+    +enviarMoedas(a: Aluno, qtd: int, motivo: String): Transacao
+    +consultarExtrato(): List<Transacao>
+}
+
+class EmpresaParceira {
+    +cnpj: String
+    +nomeFantasia: String
+    +descricao: String
+    +cadastrarVantagem(v: Vantagem): void
+    +conferirCupom(codigo: String): boolean
+}
+
+Usuario <|-- Aluno
+Usuario <|-- Professor
+Usuario <|-- EmpresaParceira
+
+' ===== Instituição =====
+class Instituicao {
+    +id: Long
+    +nome: String
+    +cnpj: String
+    +endereco: String
+}
+
+' ===== Vantagem =====
+class Vantagem {
+    +id: Long
+    +nome: String
+    +descricao: String
+    +custoMoedas: int
+    +fotoUrl: String
+}
+
+' ===== Transação =====
+enum TipoTransacao {
+    ENVIO_MOEDA
+    RESGATE_VANTAGEM
+}
+
+class Transacao {
+    +id: Long
+    +tipo: TipoTransacao
+    +quantidadeMoedas: int
+    +dataHora: LocalDateTime
+    +mensagem: String
+    +codigoCupom: String
+    +gerarCupom(): String
+}
+
+' ===== Serviço de Notificação =====
+class EmailService {
+    +enviarEmail(destino: String, assunto: String, corpo: String): void
+    +notificarRecebimentoMoeda(t: Transacao): void
+    +enviarCupomAluno(t: Transacao): void
+    +notificarEmpresaResgate(t: Transacao): void
+}
+
+' ===== Relacionamentos =====
+Instituicao "1" --> "0..*" Aluno : "possui"
+Instituicao "1" --> "0..*" Professor : "possui"
+EmpresaParceira "1" --> "0..*" Vantagem : "oferece"
+
+Professor "1" --> "0..*" Transacao : "envia"
+Aluno "1" --> "0..*" Transacao : "recebe/resgata"
+Vantagem "1" --> "0..*" Transacao : "resgatada em"
+
+Transacao ..> TipoTransacao
+Transacao ..> EmailService : "<<usa>>"
+
+@enduml

@@ -1,0 +1,214 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-05-12T18:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v9.0.0",
+  "resources": [
+    {
+      "_id": "wrk_moeda",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "Sistema de Moeda Estudantil",
+      "description": "API do backend Micronaut — Lab03S02",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_moeda",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080/api",
+        "token": ""
+      },
+      "isPrivate": false
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "1 — Auth",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "fld_inst",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "2 — Instituições",
+      "metaSortKey": -90
+    },
+    {
+      "_id": "fld_alunos",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "3 — Alunos",
+      "metaSortKey": -80
+    },
+    {
+      "_id": "fld_empresas",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "4 — Empresas Parceiras",
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (professor seed)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"joao.aramuni@puc.br\",\n  \"senha\": \"senha123\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_login_aluno",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (aluno criado)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"senha123\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_inst_list",
+      "_type": "request",
+      "parentId": "fld_inst",
+      "name": "GET /instituicoes (público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/instituicoes",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_aluno_post",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "POST /alunos (cadastrar — público)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/alunos",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"senha123\",\n  \"cpf\": \"12345678900\",\n  \"rg\": \"MG1234567\",\n  \"nome\": \"Aluno Teste\",\n  \"endereco\": \"Rua A, 100 - Belo Horizonte/MG\",\n  \"curso\": \"Engenharia de Software\",\n  \"instituicaoId\": 1\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_aluno_list",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "GET /alunos (autenticado)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/alunos",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_aluno_get",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "GET /alunos/{id}",
+      "method": "GET",
+      "url": "{{ _.base_url }}/alunos/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_aluno_put",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "PUT /alunos/{id} (atualizar)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/alunos/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"\",\n  \"cpf\": \"12345678900\",\n  \"rg\": \"MG1234567\",\n  \"nome\": \"Aluno Teste Atualizado\",\n  \"endereco\": \"Rua A, 100 - BH/MG\",\n  \"curso\": \"Engenharia de Software\",\n  \"instituicaoId\": 1\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_aluno_del",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "DELETE /alunos/{id}",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/alunos/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -60
+    },
+    {
+      "_id": "req_emp_post",
+      "_type": "request",
+      "parentId": "fld_empresas",
+      "name": "POST /empresas (cadastrar — público)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/empresas",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"contato@parceira.com\",\n  \"senha\": \"senha123\",\n  \"cnpj\": \"12345678000199\",\n  \"nomeFantasia\": \"Restaurante Universitário\",\n  \"descricao\": \"Oferece descontos em refeições para alunos\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_emp_list",
+      "_type": "request",
+      "parentId": "fld_empresas",
+      "name": "GET /empresas (autenticado)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/empresas",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_emp_get",
+      "_type": "request",
+      "parentId": "fld_empresas",
+      "name": "GET /empresas/{id}",
+      "method": "GET",
+      "url": "{{ _.base_url }}/empresas/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_emp_put",
+      "_type": "request",
+      "parentId": "fld_empresas",
+      "name": "PUT /empresas/{id} (atualizar)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/empresas/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"contato@parceira.com\",\n  \"senha\": \"\",\n  \"cnpj\": \"12345678000199\",\n  \"nomeFantasia\": \"Restaurante Universitário PUC\",\n  \"descricao\": \"Atualizado: refeições com 30% off\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_emp_del",
+      "_type": "request",
+      "parentId": "fld_empresas",
+      "name": "DELETE /empresas/{id}",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/empresas/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -60
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+@startuml
+left to right direction
+
+actor Aluno
+actor Professor
+actor "Empresa Parceira" as Empresa
+
+' --- Autenticação (todos os atores) ---
+Aluno --> (Autenticar)
+Professor --> (Autenticar)
+Empresa --> (Autenticar)
+(Autenticar) ..> (Validar Credenciais) : <<include>>
+
+' --- Cadastros ---
+Aluno --> (Cadastrar Aluno)
+(Cadastrar Aluno) ..> (Selecionar Instituição) : <<include>>
+
+Empresa --> (Cadastrar Empresa Parceira)
+
+' --- Vantagens (Empresa) ---
+Empresa --> (Cadastrar Vantagem)
+(Cadastrar Vantagem) ..> (Adicionar Foto do Produto) : <<include>>
+
+' --- Envio de moedas (Professor) ---
+Professor --> (Enviar Moedas)
+(Enviar Moedas) ..> (Verificar Saldo) : <<include>>
+(Enviar Moedas) ..> (Informar Motivo) : <<include>>
+(Enviar Moedas) ..> (Notificar Aluno por Email) : <<include>>
+
+' --- Resgate de vantagens (Aluno) ---
+Aluno --> (Resgatar Vantagem)
+(Resgatar Vantagem) ..> (Debitar Saldo) : <<include>>
+(Resgatar Vantagem) ..> (Gerar Código de Cupom) : <<include>>
+(Resgatar Vantagem) ..> (Enviar Cupom ao Aluno por Email) : <<include>>
+(Resgatar Vantagem) ..> (Notificar Empresa por Email) : <<include>>
+
+Empresa --> (Conferir Cupom)
+
+' --- Extrato ---
+Aluno --> (Consultar Extrato)
+Professor --> (Consultar Extrato)
+
+@enduml

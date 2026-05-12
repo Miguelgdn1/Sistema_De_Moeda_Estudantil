@@ -1,11 +1,12 @@
 package com.puc.moedaestudantil.model;
 
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "usuario")
-// Define a estratégia de herança: tabelas separadas que se unem pelo ID
 @Inheritance(strategy = InheritanceType.JOINED)
+@Serdeable
 public abstract class Usuario {
 
     @Id
@@ -15,44 +16,17 @@ public abstract class Usuario {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "senha_hash")
     private String senhaHash;
 
-    // Construtor vazio obrigatório para o Hibernate
-    public Usuario() {
-    }
+    public Usuario() {}
 
-    // Método para validar senha (útil para o futuro sistema de login)
-    public boolean autenticar(String senha) {
-        // No futuro, você usará uma biblioteca de hash (ex: BCrypt)
-        return this.senhaHash.equals(senha);
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    // ----------------------------------------------------
-    // GETTERS E SETTERS
-    // ----------------------------------------------------
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSenhaHash() {
-        return senhaHash;
-    }
-
-    public void setSenhaHash(String senhaHash) {
-        this.senhaHash = senhaHash;
-    }
+    public String getSenhaHash() { return senhaHash; }
+    public void setSenhaHash(String senhaHash) { this.senhaHash = senhaHash; }
 }
