@@ -1,0 +1,97 @@
+<header class="site-header" role="banner">
+    <div class="topbar">
+        <h1 class="site-title">
+            <a routerLink="/" class="site-logo">
+                <i class="icon ion-ios-book logo-icon"></i>
+                <span class="logo-text">Student<span class="logo-highlight">Coins</span></span>
+            </a>
+        </h1>
+
+        <nav class="top-navigation" role="navigation">
+            <ul class="inline-list padded-list">
+                <ng-container *ngIf="!isLoggedIn">
+                    <li><a href="#" class="icon ion-university">Instituições</a></li>
+                    <li><a href="#" class="icon ion-map">Vantagens</a></li>
+                    <li><a routerLink="/login" class="icon ion-android-exit button button-primary">Entrar / Cadastrar</a></li>
+                </ng-container>
+
+                <ng-container *ngIf="isLoggedIn">
+                    <li><a routerLink="/alunos" *ngIf="userRole === 'ALUNO'" class="icon ion-person">Meu Painel</a></li>
+                    <li><a routerLink="/empresas" *ngIf="userRole === 'EMPRESA'" class="icon ion-briefcase">Painel da Empresa</a></li>
+                    <li><a href="#" (click)="logout($event)" class="icon ion-log-out button button-error">Sair da Conta</a></li>
+                </ng-container>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="header-image">
+        <div class="header-image-text">
+<h2 class="header-title">Student Coins</h2>
+
+            <ng-container *ngIf="!isLoggedIn">
+                <p class="header-description">A plataforma de mérito estudantil que conecta o seu esforço a recompensas reais.</p>
+                <a routerLink="/login" class="button button-accent">Sou Aluno (Acessar)</a>
+                <a routerLink="/login" class="button button-secondary">Sou Empresa Parceira</a>
+            </ng-container>
+
+            <ng-container *ngIf="isLoggedIn && userRole === 'ALUNO'">
+                <p class="header-description">Bem-vindo de volta! Pronto para trocar suas notas por prêmios?</p>
+                <a routerLink="/alunos" class="button button-accent">Acessar Meu Painel e Extrato</a>
+            </ng-container>
+
+            <ng-container *ngIf="isLoggedIn && userRole === 'EMPRESA'">
+                <p class="header-description">Gerencie suas vantagens e acompanhe os alunos na sua loja.</p>
+                <a routerLink="/empresas" class="button button-secondary">Acessar Painel da Empresa</a>
+            </ng-container>
+
+            <ng-container *ngIf="isLoggedIn && userRole !== 'ALUNO' && userRole !== 'EMPRESA'">
+                <p class="header-description">Bem-vindo de volta ao sistema do Student Coins!</p>
+                <a routerLink="/alunos" class="button button-primary">Acessar o Sistema</a>
+            </ng-container>
+        </div>
+    </div>
+</header>
+
+<main role="main" class="site-main" *ngIf="!isLoggedIn">
+    <section class="fixed-width highlighted-bg">
+        <h2>Como Funciona</h2>
+        <div class="col fourth">
+            <h3>Estude e Destaque-se</h3>
+            <i class="icon icon-large ion-university"></i>
+            <p>Os professores avaliam seu desempenho e mérito acadêmico.</p>
+        </div>
+        <div class="col fourth">
+            <h3>Ganhe Moedas</h3>
+            <i class="icon icon-large ion-ribbon-b"></i>
+            <p>Receba Student Coins como recompensa pelo seu bom comportamento e notas.</p>
+        </div>
+        <div class="col fourth">
+            <h3>Troque por Vantagens</h3>
+            <i class="icon icon-large ion-bag"></i>
+            <p>Use suas moedas em empresas parceiras cadastradas no sistema.</p>
+        </div>
+        <div class="col fourth">
+            <h3>Conecte-se</h3>
+            <i class="icon icon-large ion-person-stalker"></i>
+            <p>Junte-se à comunidade de alunos motivados e parceiros engajados.</p>
+        </div>
+    </section>
+
+    <section class="fixed-width">
+        <h2>Por que participar da plataforma?</h2>
+        <ul class="large-list">
+            <li class="icon ion-checkmark-round">Receba reconhecimento pelo seu mérito acadêmico de forma tangível.</li>
+            <li class="icon ion-checkmark-round">Acesse descontos exclusivos e vantagens em empresas parceiras.</li>
+            <li class="icon ion-checkmark-round">Seja uma empresa parceira e atraia o público universitário e escolar.</li>
+            <li class="icon ion-checkmark-round">Fortaleça a relação entre a instituição de ensino, alunos e o comércio local.</li>
+        </ul>
+        <a routerLink="/login" class="button button-accent">Comece a usar hoje (é grátis!)</a>
+    </section>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+    <ul class="inline-list">
+        <li><a href="#" class="icon ion-social-github">Github do Projeto</a></li>
+        <li><a href="#" class="icon ion-locked">Política de Privacidade</a></li>
+    </ul>
+</footer>

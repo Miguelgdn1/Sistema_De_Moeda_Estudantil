@@ -115,6 +115,8 @@ Sistema_De_Moeda_Estudantil/
 
    ```powershell
    cd Aplicacao\Frontend
+   npm install gsap snapsvg snapsvg-cjs
+   npm install @types/snapsvg -D
    npm install
    npm start
    ```
@@ -136,7 +138,7 @@ Sistema_De_Moeda_Estudantil/
 
 [![GitHub](https://img.shields.io/badge/GitHub-Henrique_Carvalho-181717?logo=github)](https://github.com/henriquegdc)
 
-[![GitHub](https://img.shields.io/badge/GitHub-João_Pedro_Moura_Santos-181717?logo=github)](https://github.com/joaopedromourinhasantos)
+[![GitHub](https://img.shields.io/badge/GitHub-João_Pedro_Moura_Santos-181717?logo=github)](https://github.com/JoaoMouraS)
 
 [![GitHub](https://img.shields.io/badge/GitHub-Miguel_Gomes-181717?logo=github)](https://github.com/Miguelgdn1)
 

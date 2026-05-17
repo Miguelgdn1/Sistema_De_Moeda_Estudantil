@@ -1,0 +1,89 @@
+.intro-container {
+ animation: fadeIn 1.5s ease-in-out;
+  background-color: var(--bg-main); 
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+// Estilo do Nome Superior
+.intro-title {
+    font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--primary); /* Substituído aqui */
+  margin-bottom: 10px;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  animation: slideDown 1s ease-out;
+}
+
+// Container do SVG
+.student {
+  width: 400px;
+  height: 385px;
+  position: relative;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+}
+
+// Estilo do Timer Regressivo
+.intro-timer {
+  margin-top: 30px;
+  text-align: center;
+  animation: fadeInUp 1.2s ease-out;
+
+  p {
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+
+    span {
+font-weight: bold;
+  color: var(--primary); /* Substituído aqui */
+  font-size: 1.3rem;
+    }
+  }
+}
+
+// Barra de carregamento visual animada de 7 segundos
+.progress-bar-container {
+  width: 220px;
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary); /* Substituído aqui */
+  border-radius: 4px;
+  animation: loadProgress 7s linear forwards;
+}
+
+// Keyframes das Animações Estruturais
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes loadProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}

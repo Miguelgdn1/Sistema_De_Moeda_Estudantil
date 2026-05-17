@@ -1,0 +1,170 @@
+// Importação de mixes e variáveis de tamanho do antigo template (simplificado)
+$base-font-family: 'Poppins', Lato, sans-serif;
+$base-line-height: 1.4;
+$padding-s: 1.4rem;
+$padding-m: 2.8rem;
+$padding-l: 4.2rem;
+$border-radius: 6px;
+
+@mixin clearfix {
+  &::after { content: ""; clear: both; display: table; }
+}
+
+* { box-sizing: inherit; }
+html { box-sizing: border-box; }
+
+body {
+  font-family: $base-font-family;
+  color: var(--text-light);
+  background-color: var(--bg-main);
+}
+
+a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+h1, h2, h3 { text-align: center; color: var(--text-dark); margin-bottom: 1rem; }
+h2 { font-size: 2.2rem; margin-top: 2rem; }
+h3 { font-size: 1.4rem; font-weight: 600; }
+p { margin: $padding-s 0; color: var(--text-dark); line-height: 1.6; }
+
+// ==========================================
+// BOTÕES PADRONIZADOS PELO DESIGN SYSTEM
+// ==========================================
+.button {
+  border-radius: $border-radius;
+  border: 0;
+  color: var(--text-light);
+  display: inline-block;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: 0.3s;
+  text-transform: uppercase;
+  margin: 10px;
+
+  &:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+  &-primary { background: var(--primary); }
+  &-primary:hover { background: var(--primary-hover); }
+
+  &-accent { background: var(--accent); }
+  &-accent:hover { background: var(--accent-hover); }
+
+  &-secondary { background: var(--secondary); }
+  &-secondary:hover { background: var(--secondary-hover); }
+
+  &-error { background: var(--error); }
+  &-error:hover { opacity: 0.8; }
+}
+
+// ==========================================
+// LOGO (Student Coins)
+// ==========================================
+.site-title { display: block; margin: 0; float: left; }
+.site-logo {
+  display: flex; align-items: center; gap: 8px; font-size: 1.8rem;
+  font-weight: 800; color: var(--primary); transition: all 0.3s ease;
+
+  .logo-text { letter-spacing: -1px; }
+  .logo-highlight { color: var(--accent); }
+  .logo-icon { color: var(--accent); font-size: 2.2rem; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+  &:hover {
+    color: var(--text-light);
+    .logo-icon { transform: translateY(-3px) scale(1.1) rotate(-10deg); color: var(--text-light); }
+  }
+}
+
+// ==========================================
+// TOPBAR (Menu de navegação fixo)
+// ==========================================
+.topbar {
+  background: var(--bg-main);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 10px 40px;
+  @include clearfix;
+}
+
+.top-navigation {
+  float: right;
+  .icon::before { margin-right: 8px; }
+}
+
+.inline-list {
+  display: flex; align-items: center; margin: 0; padding: 0; list-style: none;
+  a { padding: 10px; color: var(--text-muted); }
+  a:hover { color: var(--primary); }
+  .button { color: var(--text-light) !important; margin-left: 15px; }
+}
+
+// ==========================================
+// BANNER HERO (Imagem de fundo)
+// ==========================================
+.header-image {
+  background: linear-gradient(rgba(25, 43, 64, 0.85), rgba(25, 43, 64, 0.95)), 
+              url(https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80) no-repeat center center / cover;
+  text-align: center;
+  min-height: 75vh;
+  display: flex; align-items: center; justify-content: center;
+  padding-top: 80px; // Evita conflito com o menu fixo
+}
+
+.header-title { color: var(--text-light); font-size: 3.5rem; margin-bottom: 0; }
+.header-description { color: var(--accent); font-size: 1.3rem; margin-top: 1rem; margin-bottom: 2rem; font-weight: 600; }
+
+// ==========================================
+// SEÇÕES DE CONTEÚDO (Para visitantes)
+// ==========================================
+.site-main { background-color: var(--bg-card); padding-bottom: 40px;}
+
+.fixed-width { max-width: 1200px; margin: 0 auto; padding: 40px 20px; @include clearfix; }
+.highlighted-bg { background: #f2f5f7; border-radius: 12px; margin-top: 40px; }
+
+.col { float: left; padding: 20px; text-align: center; }
+.fourth { width: 25%; }
+
+.icon-large { font-size: 4rem; color: var(--primary); display: block; margin: 15px 0; transition: 0.3s; }
+.col:hover .icon-large { transform: scale(1.1) rotate(5deg); color: var(--accent); }
+
+.large-list {
+  max-width: 800px; margin: 0 auto 30px; padding: 0; list-style: none; text-align: left;
+  li {
+    margin: 15px 0; font-size: 1.1rem; color: var(--text-dark); transition: 0.3s;
+    &::before { color: var(--primary); font-size: 1.2rem; margin-right: 15px; }
+    &:hover { transform: translateX(10px); color: var(--primary); }
+  }
+}
+
+// ==========================================
+// FOOTER
+// ==========================================
+.site-footer {
+  background: var(--bg-main); padding: 40px 20px; text-align: center;
+  border-top: 4px solid var(--primary);
+  .inline-list { justify-content: center; }
+  a { color: var(--text-muted); }
+  a:hover { color: var(--accent); }
+}
+
+// ==========================================
+// RESPONSIVIDADE
+// ==========================================
+@media (max-width: 768px) {
+  .topbar { padding: 10px; text-align: center; }
+  .site-title { float: none; display: flex; justify-content: center; margin-bottom: 10px; }
+  .top-navigation { float: none; display: flex; justify-content: center; }
+  .inline-list { flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .inline-list .button { margin-left: 0; width: 100%; }
+  
+  .fourth { width: 100%; }
+  .header-title { font-size: 2.5rem; }
+  .button { width: 100%; margin: 10px 0; }
+}
