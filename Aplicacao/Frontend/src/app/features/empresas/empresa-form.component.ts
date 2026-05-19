@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EmpresaService } from '../../core/services/empresa.service';
+import { AuthService } from '../../core/services/auth.service';
 import { EmpresaRequest } from '../../core/models/api-models';
 
 @Component({
@@ -21,6 +22,9 @@ import { EmpresaRequest } from '../../core/models/api-models';
         <div class="forms__area">
           <form class="login__form" [formGroup]="form" (ngSubmit)="onSubmit()">
             <h1 class="form__title">{{ isEdit() ? 'Editar Empresa' : 'Cadastrar Empresa Parceira' }}</h1>
+            <div *ngIf="message()" class="alert" [class.success]="messageType() === 'success'" [class.error]="messageType() === 'error'">
+              {{ message() }}
+            </div>
             
             <div class="form-grid">
               <div class="input__group span-2" [class.formError]="form.get('nomeFantasia')?.invalid && form.get('nomeFantasia')?.touched">
@@ -148,6 +152,13 @@ import { EmpresaRequest } from '../../core/models/api-models';
       font-size: 15px; font-weight: 600; text-transform: uppercase; transition: 0.3s;
     }
     .submit-button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+    .alert {
+      width: 100%; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
+      font-size: 0.95rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    .alert.success { background-color: #1f7a4d; color: #fff; }
+    .alert.error { background-color: #c63d2f; color: #fff; }
     
     .btn-empresa { background-color: var(--secondary); }
     .btn-empresa:hover:not(:disabled) { background-color: var(--secondary-hover); transform: translateY(-2px); }
@@ -177,12 +188,15 @@ import { EmpresaRequest } from '../../core/models/api-models';
 export class EmpresaFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private empresaService = inject(EmpresaService);
+  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private snack = inject(MatSnackBar);
 
   saving = signal(false);
   empresaId = signal<number | null>(null);
+  message = signal<string | null>(null);
+  messageType = signal<'success' | 'error' | null>(null);
   isEdit = () => this.empresaId() !== null;
 
   form = this.fb.nonNullable.group({
@@ -195,9 +209,20 @@ export class EmpresaFormComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
+    const routePath = this.route.snapshot.routeConfig?.path;
+
     if (id) {
       this.empresaId.set(Number(id));
-      this.empresaService.buscar(Number(id)).subscribe({
+    } else if (routePath === 'empresas/editar') {
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser?.tipoUsuario?.toUpperCase() === 'EMPRESA') {
+        this.empresaId.set(currentUser.id);
+      }
+    }
+
+    const empresaIdForLoad = this.empresaId();
+    if (empresaIdForLoad !== null) {
+      this.empresaService.buscar(empresaIdForLoad).subscribe({
         next: (e) => {
           this.form.patchValue({
             nomeFantasia: e.nomeFantasia,
@@ -219,23 +244,33 @@ export class EmpresaFormComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    this.message.set(null);
+    this.messageType.set(null);
     this.saving.set(true);
     const dto = this.form.getRawValue() as EmpresaRequest;
-
-    const obs = this.isEdit()
-      ? this.empresaService.atualizar(this.empresaId()!, dto)
+    const empresaId = this.empresaId();
+    const obs = empresaId !== null
+      ? this.empresaService.atualizar(empresaId, dto)
       : this.empresaService.cadastrar(dto);
 
     obs.subscribe({
       next: () => {
         this.saving.set(false);
-        this.snack.open(this.isEdit() ? 'Empresa atualizada.' : 'Empresa cadastrada.', 'Fechar', { duration: 3000 });
-        this.router.navigate([this.isEdit() ? '/empresas' : '/login']);
+        const successText = this.isEdit() ? 'Dados atualizados com sucesso.' : 'Empresa cadastrada com sucesso. Faça login para continuar.';
+        this.message.set(successText);
+        this.messageType.set('success');
+
+        if (this.isEdit()) {
+          this.router.navigate(['/home']);
+        } else {
+          this.router.navigate(['/login']);
+        }
       },
       error: (err) => {
         this.saving.set(false);
         const msg = err?.error?.mensagem ?? 'Erro ao salvar empresa.';
-        this.snack.open(msg, 'Fechar', { duration: 4000 });
+        this.message.set(msg);
+        this.messageType.set('error');
       },
     });
   }

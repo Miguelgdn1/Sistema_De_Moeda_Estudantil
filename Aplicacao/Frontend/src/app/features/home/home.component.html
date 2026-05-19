@@ -18,7 +18,7 @@
                 <ng-container *ngIf="isLoggedIn">
                     <li><span class="greeting-text" style="color: white; margin-right: 15px; font-weight: bold;">Olá, {{ userName }}! 👋</span></li>
                     <li><a routerLink="/alunos/painel" *ngIf="userRole === 'ALUNO'" class="icon ion-person">Meu Painel</a></li>
-                    <li><a routerLink="/empresas" *ngIf="userRole === 'EMPRESA'" class="icon ion-briefcase">Painel Empresa</a></li>
+                    <li><a routerLink="/empresas/editar" *ngIf="userRole === 'EMPRESA'" class="icon ion-briefcase">Painel Empresa</a></li>
                     <li><a href="#" (click)="logout($event)" class="icon ion-log-out button button-error">Sair da Conta</a></li>
                 </ng-container>
             </ul>
@@ -124,13 +124,13 @@
                 <h3>🔄 Trocas Realizadas</h3>
                 <p>Veja o histórico de alunos que utilizaram Moedas Estudantis na sua loja.</p>
                 <br>
-                <a routerLink="/empresas" class="button button-secondary">Ver Relatório</a>
+                <a routerLink="/empresas/relatorio" class="button button-secondary">Ver Relatório</a>
             </div>
             <div class="col third">
                 <h3>⚙️ Dados Cadastrais</h3>
                 <p>Atualize informações sobre o seu CNPJ, endereço e logomarca da empresa.</p>
                 <br>
-                <a routerLink="/empresas" class="button button-secondary">Atualizar Perfil</a>
+                <a routerLink="/empresas/editar" class="button button-secondary">Atualizar Perfil</a>
             </div>
         </section>
     </ng-container>

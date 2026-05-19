@@ -2,8 +2,10 @@ package com.puc.moedaestudantil.controller;
 
 import com.puc.moedaestudantil.dto.EmpresaParceiraRequestDTO;
 import com.puc.moedaestudantil.dto.EmpresaParceiraResponseDTO;
+import com.puc.moedaestudantil.dto.EmpresaParceiraUpdateRequestDTO;
 import com.puc.moedaestudantil.model.EmpresaParceira;
 import com.puc.moedaestudantil.service.EmpresaParceiraService;
+import com.puc.moedaestudantil.dto.TransacaoResponseDTO;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
 import io.micronaut.security.annotation.Secured;
@@ -42,7 +44,7 @@ public class EmpresaParceiraController {
 
     @Put("/{id}")
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<EmpresaParceiraResponseDTO> atualizar(Long id, @Body @Valid EmpresaParceiraRequestDTO dto) {
+    public HttpResponse<EmpresaParceiraResponseDTO> atualizar(Long id, @Body @Valid EmpresaParceiraUpdateRequestDTO dto) {
         return HttpResponse.ok(EmpresaParceiraResponseDTO.fromEntity(empresaService.atualizar(id, dto)));
     }
 
@@ -51,5 +53,11 @@ public class EmpresaParceiraController {
     public HttpResponse<Void> deletar(Long id) {
         empresaService.deletar(id);
         return HttpResponse.noContent();
+    }
+
+    @Get("/{id}/trocas")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    public HttpResponse<List<TransacaoResponseDTO>> relatorioTrocas(Long id) {
+        return HttpResponse.ok(empresaService.listarTrocasPorEmpresa(id));
     }
 }

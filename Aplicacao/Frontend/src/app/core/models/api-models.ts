@@ -63,6 +63,8 @@ export interface TransacaoResponse {
   descricao: string;
   tipo: 'CREDITO' | 'DEBITO';
   valor: number;
+  alunoId?: number | null;
+  alunoNome?: string | null;
 }
 
 export type TransactionType = 'CREDITO' | 'DEBITO';
@@ -73,6 +75,8 @@ export interface Transaction {
   descricao: string;
   tipo: TransactionType;
   valor: number;
+  alunoId?: number | null;
+  alunoNome?: string | null;
 }
 
 export type Student = AlunoResponse;

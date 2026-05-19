@@ -10,7 +10,9 @@ public record TransacaoResponseDTO(
     String tipo,
     Integer valor,
     LocalDateTime dataHora,
-    String descricao
+    String descricao,
+    Long alunoId,
+    String alunoNome
 ) {
     public static TransacaoResponseDTO fromEntity(Transacao transacao) {
         String descricao = transacao.getMensagem();
@@ -23,12 +25,16 @@ public record TransacaoResponseDTO(
                 descricao = transacao.getTipo() != null ? transacao.getTipo().name() : "Transação";
             }
         }
+        Long alunoId = transacao.getAluno() != null ? transacao.getAluno().getId() : null;
+        String alunoNome = transacao.getAluno() != null ? transacao.getAluno().getNome() : null;
         return new TransacaoResponseDTO(
             transacao.getId(),
             transacao.getTipo() != null ? transacao.getTipo().name() : null,
             transacao.getQuantidadeMoedas(),
             transacao.getDataHora(),
-            descricao
+            descricao,
+            alunoId,
+            alunoNome
         );
     }
 }

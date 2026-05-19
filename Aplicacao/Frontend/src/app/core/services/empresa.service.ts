@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { EmpresaRequest, EmpresaResponse } from '../models/api-models';
+import { EmpresaRequest, EmpresaResponse, TransacaoResponse } from '../models/api-models';
 
 const API_BASE = 'http://localhost:8080/api/empresas';
 
@@ -23,6 +23,10 @@ export class EmpresaService {
 
   atualizar(id: number, dto: EmpresaRequest): Observable<EmpresaResponse> {
     return this.http.put<EmpresaResponse>(`${API_BASE}/${id}`, dto);
+  }
+
+  relatorioTrocas(id: number): Observable<import('../models/api-models').TransacaoResponse[]> {
+    return this.http.get<import('../models/api-models').TransacaoResponse[]>(`${API_BASE}/${id}/trocas`);
   }
 
   deletar(id: number): Observable<void> {

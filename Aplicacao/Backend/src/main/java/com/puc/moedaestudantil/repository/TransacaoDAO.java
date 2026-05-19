@@ -45,4 +45,13 @@ public class TransacaoDAO {
                 .setParameter("id", professorId)
                 .getResultList();
     }
+
+    @Transactional
+    public List<Transacao> listarPorEmpresa(Long empresaId) {
+        return entityManager.createQuery(
+                "SELECT t FROM Transacao t WHERE t.vantagem IS NOT NULL AND t.vantagem.empresa.id = :id ORDER BY t.dataHora DESC",
+                Transacao.class)
+                .setParameter("id", empresaId)
+                .getResultList();
+    }
 }

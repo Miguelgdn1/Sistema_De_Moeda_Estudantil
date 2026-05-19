@@ -50,6 +50,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/empresas/empresa-form.component').then((m) => m.EmpresaFormComponent),
   },
   {
+    path: 'empresas/editar',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/empresas/empresa-form.component').then((m) => m.EmpresaFormComponent),
+  },
+  {
+    path: 'empresas/relatorio',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/empresas/empresa-relatorio.component').then((m) => m.EmpresaRelatorioComponent),
+  },
+  {
     path: 'empresas/:id/editar',
     canActivate: [authGuard, adminGuard], // 🛡️ Protegido: Apenas ADMIN pode editar
     loadComponent: () => import('./features/empresas/empresa-form.component').then((m) => m.EmpresaFormComponent),

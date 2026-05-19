@@ -1,8 +1,11 @@
 package com.puc.moedaestudantil.service;
 
 import com.puc.moedaestudantil.dto.EmpresaParceiraRequestDTO;
+import com.puc.moedaestudantil.dto.EmpresaParceiraUpdateRequestDTO;
 import com.puc.moedaestudantil.model.EmpresaParceira;
 import com.puc.moedaestudantil.repository.EmpresaParceiraDAO;
+import com.puc.moedaestudantil.repository.TransacaoDAO;
+import com.puc.moedaestudantil.dto.TransacaoResponseDTO;
 import com.puc.moedaestudantil.security.PasswordEncoder;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -17,6 +20,9 @@ public class EmpresaParceiraService {
 
     @Inject
     private PasswordEncoder passwordEncoder;
+
+    @Inject
+    private TransacaoDAO transacaoDAO;
 
     public EmpresaParceira cadastrar(EmpresaParceiraRequestDTO dto) {
         if (empresaDAO.existePorCnpj(dto.getCnpj())) {
@@ -42,7 +48,7 @@ public class EmpresaParceiraService {
                 .orElseThrow(() -> new EntityNotFoundException("Empresa não encontrada: id=" + id));
     }
 
-    public EmpresaParceira atualizar(Long id, EmpresaParceiraRequestDTO dto) {
+    public EmpresaParceira atualizar(Long id, EmpresaParceiraUpdateRequestDTO dto) {
         EmpresaParceira empresa = buscarPorId(id);
 
         if (!empresa.getCnpj().equals(dto.getCnpj()) && empresaDAO.existePorCnpj(dto.getCnpj())) {
@@ -65,5 +71,11 @@ public class EmpresaParceiraService {
             throw new EntityNotFoundException("Empresa não encontrada: id=" + id);
         }
         empresaDAO.deletar(id);
+    }
+
+    public java.util.List<TransacaoResponseDTO> listarTrocasPorEmpresa(Long empresaId) {
+        return transacaoDAO.listarPorEmpresa(empresaId).stream()
+                .map(TransacaoResponseDTO::fromEntity)
+                .toList();
     }
 }
