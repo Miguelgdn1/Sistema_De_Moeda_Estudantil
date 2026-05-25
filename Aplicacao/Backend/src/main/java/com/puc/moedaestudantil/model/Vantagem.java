@@ -2,6 +2,7 @@ package com.puc.moedaestudantil.model;
 
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vantagem")
@@ -18,15 +19,18 @@ public class Vantagem {
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "custo_moedas")
     private Integer custoMoedas;
 
-    @Column(length = 500)
+    @Column(length = 500, name = "foto_url")
     private String fotoUrl;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "empresa_id", nullable = false)
     private EmpresaParceira empresa;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     public Vantagem() {}
 
@@ -47,4 +51,7 @@ public class Vantagem {
 
     public EmpresaParceira getEmpresa() { return empresa; }
     public void setEmpresa(EmpresaParceira empresa) { this.empresa = empresa; }
+
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 }

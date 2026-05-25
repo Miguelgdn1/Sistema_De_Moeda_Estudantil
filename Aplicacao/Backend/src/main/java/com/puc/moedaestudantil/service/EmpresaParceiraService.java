@@ -1,91 +1,118 @@
 package com.puc.moedaestudantil.service;
 
-import com.puc.moedaestudantil.dto.EmpresaParceiraRequestDTO;
-import com.puc.moedaestudantil.dto.EmpresaParceiraUpdateRequestDTO;
+import com.puc.moedaestudantil.dto.request.EmpresaParceiraRequest;
+import com.puc.moedaestudantil.dto.request.EmpresaParceiraUpdateRequest;
+import com.puc.moedaestudantil.dto.response.EmpresaParceiraResponse;
+import com.puc.moedaestudantil.dto.response.TransacaoResponse;
+import com.puc.moedaestudantil.exception.CnpjDuplicadoException;
+import com.puc.moedaestudantil.exception.EmailDuplicadoException;
+import com.puc.moedaestudantil.exception.EmpresaNaoEncontradaException;
 import com.puc.moedaestudantil.model.EmpresaParceira;
-import com.puc.moedaestudantil.repository.EmpresaParceiraDAO;
-import com.puc.moedaestudantil.repository.TransacaoDAO;
-import com.puc.moedaestudantil.repository.UsuarioDAO;
-import com.puc.moedaestudantil.dto.TransacaoResponseDTO;
+import com.puc.moedaestudantil.repository.EmpresaParceiraRepository;
+import com.puc.moedaestudantil.repository.TransacaoRepository;
+import com.puc.moedaestudantil.repository.UsuarioRepository;
 import com.puc.moedaestudantil.security.PasswordEncoder;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Singleton
 public class EmpresaParceiraService {
 
-    @Inject
-    private EmpresaParceiraDAO empresaDAO;
+    private final EmpresaParceiraRepository empresaRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final TransacaoRepository transacaoRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Inject
-    private UsuarioDAO usuarioDAO;
+    public EmpresaParceiraService(EmpresaParceiraRepository empresaRepository,
+                                  UsuarioRepository usuarioRepository,
+                                  TransacaoRepository transacaoRepository,
+                                  PasswordEncoder passwordEncoder) {
+        this.empresaRepository = empresaRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.transacaoRepository = transacaoRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Inject
-    private PasswordEncoder passwordEncoder;
-
-    @Inject
-    private TransacaoDAO transacaoDAO;
-
-    public EmpresaParceira cadastrar(EmpresaParceiraRequestDTO dto) {
-        if (empresaDAO.existePorCnpj(dto.getCnpj())) {
-            throw new IllegalArgumentException("CNPJ já cadastrado.");
+    @Transactional
+    public EmpresaParceiraResponse cadastrar(EmpresaParceiraRequest request) {
+        if (empresaRepository.existsByCnpj(request.cnpj())) {
+            throw new CnpjDuplicadoException();
         }
-        if (usuarioDAO.existePorEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado.");
+        if (usuarioRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+            throw new EmailDuplicadoException();
         }
 
         EmpresaParceira empresa = new EmpresaParceira();
-        empresa.setEmail(dto.getEmail());
-        empresa.setSenhaHash(passwordEncoder.hash(dto.getSenha()));
-        empresa.setCnpj(dto.getCnpj());
-        empresa.setNomeFantasia(dto.getNomeFantasia());
-        empresa.setDescricao(dto.getDescricao());
+        empresa.setEmail(request.email());
+        empresa.setSenhaHash(passwordEncoder.hash(request.senha()));
+        empresa.setCnpj(request.cnpj());
+        empresa.setNomeFantasia(request.nomeFantasia());
+        empresa.setDescricao(request.descricao());
 
-        return empresaDAO.salvar(empresa);
+        return toResponse(empresaRepository.save(empresa));
     }
 
-    public List<EmpresaParceira> listarTodas() {
-        return empresaDAO.listarTodas();
+    public List<EmpresaParceiraResponse> listarTodas() {
+        return empresaRepository.findAllByDeletedAtIsNull().stream()
+            .map(this::toResponse)
+            .toList();
     }
 
-    public EmpresaParceira buscarPorId(Long id) {
-        return empresaDAO.buscarPorId(id)
-                .orElseThrow(() -> new EntityNotFoundException("Empresa não encontrada: id=" + id));
+    public EmpresaParceiraResponse buscarPorId(Long id) {
+        return toResponse(carregar(id));
     }
 
-    public EmpresaParceira atualizar(Long id, EmpresaParceiraUpdateRequestDTO dto) {
-        EmpresaParceira empresa = buscarPorId(id);
+    @Transactional
+    public EmpresaParceiraResponse atualizar(Long id, EmpresaParceiraUpdateRequest request) {
+        EmpresaParceira empresa = carregar(id);
 
-        if (!empresa.getCnpj().equals(dto.getCnpj()) && empresaDAO.existePorCnpj(dto.getCnpj())) {
-            throw new IllegalArgumentException("CNPJ já cadastrado por outra empresa.");
+        if (!empresa.getCnpj().equals(request.cnpj()) && empresaRepository.existsByCnpj(request.cnpj())) {
+            throw new CnpjDuplicadoException();
         }
-        if (!empresa.getEmail().equals(dto.getEmail()) && usuarioDAO.existePorEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado por outro usuário.");
+        if (!empresa.getEmail().equals(request.email())
+            && usuarioRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+            throw new EmailDuplicadoException();
         }
 
-        empresa.setEmail(dto.getEmail());
-        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-            empresa.setSenhaHash(passwordEncoder.hash(dto.getSenha()));
+        empresa.setEmail(request.email());
+        if (request.senha() != null && !request.senha().isBlank()) {
+            empresa.setSenhaHash(passwordEncoder.hash(request.senha()));
         }
-        empresa.setCnpj(dto.getCnpj());
-        empresa.setNomeFantasia(dto.getNomeFantasia());
-        empresa.setDescricao(dto.getDescricao());
+        empresa.setCnpj(request.cnpj());
+        empresa.setNomeFantasia(request.nomeFantasia());
+        empresa.setDescricao(request.descricao());
 
-        return empresaDAO.atualizar(empresa);
+        return toResponse(empresaRepository.update(empresa));
     }
 
+    @Transactional
     public void deletar(Long id) {
-        if (empresaDAO.buscarPorId(id).isEmpty()) {
-            throw new EntityNotFoundException("Empresa não encontrada: id=" + id);
-        }
-        empresaDAO.deletar(id);
+        EmpresaParceira empresa = carregar(id);
+        empresa.setDeletedAt(LocalDateTime.now());
+        empresaRepository.update(empresa);
     }
 
-    public java.util.List<TransacaoResponseDTO> listarTrocasPorEmpresa(Long empresaId) {
-        return transacaoDAO.listarPorEmpresa(empresaId).stream()
-                .map(TransacaoResponseDTO::fromEntity)
-                .toList();
+    public List<TransacaoResponse> listarTrocasPorEmpresa(Long empresaId) {
+        carregar(empresaId);
+        return transacaoRepository.listarPorEmpresa(empresaId).stream()
+            .map(TransacaoMapper::toResponse)
+            .toList();
+    }
+
+    private EmpresaParceira carregar(Long id) {
+        return empresaRepository.findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new EmpresaNaoEncontradaException(id));
+    }
+
+    private EmpresaParceiraResponse toResponse(EmpresaParceira e) {
+        return new EmpresaParceiraResponse(
+            e.getId(),
+            e.getEmail(),
+            e.getCnpj(),
+            e.getNomeFantasia(),
+            e.getDescricao()
+        );
     }
 }

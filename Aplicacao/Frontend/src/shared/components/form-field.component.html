@@ -1,0 +1,11 @@
+<div class="ff" [class.ff--error]="hasError">
+  <label *ngIf="label" class="ff__label">
+    {{ label }}
+    <span *ngIf="required" class="ff__required" aria-hidden="true">*</span>
+  </label>
+  <div class="ff__control">
+    <ng-content></ng-content>
+  </div>
+  <p *ngIf="hint && !hasError" class="ff__hint">{{ hint }}</p>
+  <p *ngIf="hasError && error" class="ff__error" role="alert">{{ error }}</p>
+</div>

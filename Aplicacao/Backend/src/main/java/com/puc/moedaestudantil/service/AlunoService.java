@@ -1,91 +1,161 @@
 package com.puc.moedaestudantil.service;
 
-import com.puc.moedaestudantil.dto.AlunoRequestDTO;
+import com.puc.moedaestudantil.dto.request.AlunoRequest;
+import com.puc.moedaestudantil.dto.request.AlunoUpdateRequest;
+import com.puc.moedaestudantil.dto.response.AlunoResponse;
+import com.puc.moedaestudantil.dto.response.TransacaoResponse;
+import com.puc.moedaestudantil.exception.AlunoNaoEncontradoException;
+import com.puc.moedaestudantil.exception.CpfDuplicadoException;
+import com.puc.moedaestudantil.exception.EmailDuplicadoException;
+import com.puc.moedaestudantil.exception.InstituicaoNaoEncontradaException;
 import com.puc.moedaestudantil.model.Aluno;
 import com.puc.moedaestudantil.model.Instituicao;
-import com.puc.moedaestudantil.repository.AlunoDAO;
-import com.puc.moedaestudantil.repository.InstituicaoDAO;
+import com.puc.moedaestudantil.repository.AlunoRepository;
+import com.puc.moedaestudantil.repository.InstituicaoRepository;
+import com.puc.moedaestudantil.repository.TransacaoRepository;
+import com.puc.moedaestudantil.repository.UsuarioRepository;
 import com.puc.moedaestudantil.security.PasswordEncoder;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Singleton
 public class AlunoService {
 
-    @Inject
-    private AlunoDAO alunoDAO;
+    private final AlunoRepository alunoRepository;
+    private final InstituicaoRepository instituicaoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final TransacaoRepository transacaoRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Inject
-    private InstituicaoDAO instituicaoDAO;
+    public AlunoService(AlunoRepository alunoRepository,
+                        InstituicaoRepository instituicaoRepository,
+                        UsuarioRepository usuarioRepository,
+                        TransacaoRepository transacaoRepository,
+                        PasswordEncoder passwordEncoder) {
+        this.alunoRepository = alunoRepository;
+        this.instituicaoRepository = instituicaoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.transacaoRepository = transacaoRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Inject
-    private PasswordEncoder passwordEncoder;
-
-    public Aluno cadastrar(AlunoRequestDTO dto) {
-        if (alunoDAO.existePorCpf(dto.getCpf())) {
-            throw new IllegalArgumentException("CPF já cadastrado.");
+    @Transactional
+    public AlunoResponse cadastrar(AlunoRequest request) {
+        if (alunoRepository.existsByCpf(request.cpf())) {
+            throw new CpfDuplicadoException();
         }
-        if (alunoDAO.existePorEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado.");
+        if (usuarioRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+            throw new EmailDuplicadoException();
         }
-        Instituicao instituicao = instituicaoDAO.buscarPorId(dto.getInstituicaoId())
-                .orElseThrow(() -> new IllegalArgumentException("Instituição não encontrada."));
+        Instituicao instituicao = instituicaoRepository.findByIdAndDeletedAtIsNull(request.instituicaoId())
+            .orElseThrow(() -> new InstituicaoNaoEncontradaException(request.instituicaoId()));
 
         Aluno aluno = new Aluno();
-        aluno.setEmail(dto.getEmail());
-        aluno.setSenhaHash(passwordEncoder.hash(dto.getSenha()));
-        aluno.setCpf(dto.getCpf());
-        aluno.setRg(dto.getRg());
-        aluno.setNome(dto.getNome());
-        aluno.setEndereco(dto.getEndereco());
-        aluno.setCurso(dto.getCurso());
+        aluno.setEmail(request.email());
+        aluno.setSenhaHash(passwordEncoder.hash(request.senha()));
+        aluno.setCpf(request.cpf());
+        aluno.setRg(request.rg());
+        aluno.setNome(request.nome());
+        aluno.setEndereco(request.endereco());
+        aluno.setCurso(request.curso());
         aluno.setSaldoMoedas(0);
         aluno.setInstituicao(instituicao);
 
-        return alunoDAO.salvar(aluno);
+        return toResponse(alunoRepository.save(aluno));
     }
 
-    public List<Aluno> listarTodos() {
-        return alunoDAO.listarTodos();
+    public List<AlunoResponse> listarTodos() {
+        return alunoRepository.findAllByDeletedAtIsNull().stream()
+            .map(this::toResponse)
+            .toList();
     }
 
-    public Aluno buscarPorId(Long id) {
-        return alunoDAO.buscarPorId(id)
-                .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado: id=" + id));
+    public AlunoResponse buscarPorId(Long id) {
+        return toResponse(carregarAluno(id));
     }
 
-    public Aluno atualizar(Long id, AlunoRequestDTO dto) {
-        Aluno aluno = buscarPorId(id);
+    @Transactional
+    public AlunoResponse atualizar(Long id, AlunoRequest request) {
+        Aluno aluno = carregarAluno(id);
 
-        if (!aluno.getCpf().equals(dto.getCpf()) && alunoDAO.existePorCpf(dto.getCpf())) {
-            throw new IllegalArgumentException("CPF já cadastrado por outro aluno.");
+        if (!aluno.getCpf().equals(request.cpf()) && alunoRepository.existsByCpf(request.cpf())) {
+            throw new CpfDuplicadoException();
         }
-        if (!aluno.getEmail().equals(dto.getEmail()) && alunoDAO.existePorEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado por outro usuário.");
+        if (!aluno.getEmail().equals(request.email())
+            && usuarioRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+            throw new EmailDuplicadoException();
         }
-        Instituicao instituicao = instituicaoDAO.buscarPorId(dto.getInstituicaoId())
-                .orElseThrow(() -> new IllegalArgumentException("Instituição não encontrada."));
+        Instituicao instituicao = instituicaoRepository.findByIdAndDeletedAtIsNull(request.instituicaoId())
+            .orElseThrow(() -> new InstituicaoNaoEncontradaException(request.instituicaoId()));
 
-        aluno.setEmail(dto.getEmail());
-        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-            aluno.setSenhaHash(passwordEncoder.hash(dto.getSenha()));
+        aluno.setEmail(request.email());
+        if (request.senha() != null && !request.senha().isBlank()) {
+            aluno.setSenhaHash(passwordEncoder.hash(request.senha()));
         }
-        aluno.setCpf(dto.getCpf());
-        aluno.setRg(dto.getRg());
-        aluno.setNome(dto.getNome());
-        aluno.setEndereco(dto.getEndereco());
-        aluno.setCurso(dto.getCurso());
+        aluno.setCpf(request.cpf());
+        aluno.setRg(request.rg());
+        aluno.setNome(request.nome());
+        aluno.setEndereco(request.endereco());
+        aluno.setCurso(request.curso());
         aluno.setInstituicao(instituicao);
 
-        return alunoDAO.atualizar(aluno);
+        return toResponse(alunoRepository.update(aluno));
     }
 
-    public void deletar(Long id) {
-        if (alunoDAO.buscarPorId(id).isEmpty()) {
-            throw new EntityNotFoundException("Aluno não encontrado: id=" + id);
+    @Transactional
+    public AlunoResponse atualizarPerfil(Long id, AlunoUpdateRequest request) {
+        Aluno aluno = carregarAluno(id);
+
+        if (!aluno.getEmail().equals(request.email())
+            && usuarioRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+            throw new EmailDuplicadoException();
         }
-        alunoDAO.deletar(id);
+
+        aluno.setNome(request.nome());
+        aluno.setEmail(request.email());
+        aluno.setEndereco(request.endereco() != null && !request.endereco().isBlank()
+            ? request.endereco() : null);
+
+        if (request.senha() != null && !request.senha().isBlank()) {
+            aluno.setSenhaHash(passwordEncoder.hash(request.senha()));
+        }
+
+        return toResponse(alunoRepository.update(aluno));
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        Aluno aluno = carregarAluno(id);
+        aluno.setDeletedAt(LocalDateTime.now());
+        alunoRepository.update(aluno);
+    }
+
+    public List<TransacaoResponse> listarExtrato(Long alunoId) {
+        carregarAluno(alunoId);
+        return transacaoRepository.listarPorAluno(alunoId).stream()
+            .map(TransacaoMapper::toResponse)
+            .toList();
+    }
+
+    private Aluno carregarAluno(Long id) {
+        return alunoRepository.findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new AlunoNaoEncontradoException(id));
+    }
+
+    private AlunoResponse toResponse(Aluno a) {
+        return new AlunoResponse(
+            a.getId(),
+            a.getEmail(),
+            a.getCpf(),
+            a.getRg(),
+            a.getNome(),
+            a.getEndereco(),
+            a.getCurso(),
+            a.getSaldoMoedas(),
+            a.getInstituicao() != null ? a.getInstituicao().getId() : null,
+            a.getInstituicao() != null ? a.getInstituicao().getNome() : null
+        );
     }
 }

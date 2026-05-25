@@ -1,57 +1,71 @@
 package com.puc.moedaestudantil.controller;
 
-import com.puc.moedaestudantil.dto.EmpresaParceiraRequestDTO;
-import com.puc.moedaestudantil.dto.EmpresaParceiraResponseDTO;
-import com.puc.moedaestudantil.dto.EmpresaParceiraUpdateRequestDTO;
-import com.puc.moedaestudantil.model.EmpresaParceira;
+import com.puc.moedaestudantil.dto.request.EmpresaParceiraRequest;
+import com.puc.moedaestudantil.dto.request.EmpresaParceiraUpdateRequest;
+import com.puc.moedaestudantil.dto.response.EmpresaParceiraResponse;
+import com.puc.moedaestudantil.dto.response.TransacaoResponse;
 import com.puc.moedaestudantil.security.AuthenticatedUser;
 import com.puc.moedaestudantil.service.EmpresaParceiraService;
-import com.puc.moedaestudantil.dto.TransacaoResponseDTO;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.*;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Put;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
-import jakarta.inject.Inject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 
+@Tag(name = "Empresas Parceiras")
 @Controller("/api/empresas")
+@Secured(SecurityRule.IS_AUTHENTICATED)
 public class EmpresaParceiraController {
 
-    @Inject
-    private EmpresaParceiraService empresaService;
+    private final EmpresaParceiraService empresaService;
 
+    public EmpresaParceiraController(EmpresaParceiraService empresaService) {
+        this.empresaService = empresaService;
+    }
+
+    @Operation(summary = "Cadastra empresa parceira")
+    @ApiResponse(responseCode = "201", description = "Empresa criada")
     @Post
     @Secured(SecurityRule.IS_ANONYMOUS)
-    public HttpResponse<EmpresaParceiraResponseDTO> cadastrar(@Body @Valid EmpresaParceiraRequestDTO dto) {
-        EmpresaParceira nova = empresaService.cadastrar(dto);
-        return HttpResponse.created(EmpresaParceiraResponseDTO.fromEntity(nova));
+    public HttpResponse<EmpresaParceiraResponse> cadastrar(@Body @Valid EmpresaParceiraRequest request) {
+        return HttpResponse.created(empresaService.cadastrar(request));
     }
 
+    @Operation(summary = "Lista empresas parceiras (admin)")
     @Get
     @Secured(AuthenticatedUser.ROLE_ADMIN)
-    public HttpResponse<List<EmpresaParceiraResponseDTO>> listar() {
-        List<EmpresaParceiraResponseDTO> dtos = empresaService.listarTodas().stream()
-                .map(EmpresaParceiraResponseDTO::fromEntity)
-                .toList();
-        return HttpResponse.ok(dtos);
+    public List<EmpresaParceiraResponse> listar() {
+        return empresaService.listarTodas();
     }
 
+    @Operation(summary = "Busca empresa por ID (proprietaria ou admin)")
     @Get("/{id}")
-    @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<EmpresaParceiraResponseDTO> buscar(Long id, Authentication authentication) {
+    public EmpresaParceiraResponse buscar(Long id, Authentication authentication) {
         AuthenticatedUser.requireOwnerOrAdmin(authentication, id);
-        return HttpResponse.ok(EmpresaParceiraResponseDTO.fromEntity(empresaService.buscarPorId(id)));
+        return empresaService.buscarPorId(id);
     }
 
+    @Operation(summary = "Atualiza empresa (proprietaria ou admin)")
     @Put("/{id}")
-    @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<EmpresaParceiraResponseDTO> atualizar(Long id, @Body @Valid EmpresaParceiraUpdateRequestDTO dto, Authentication authentication) {
+    public EmpresaParceiraResponse atualizar(Long id,
+                                             @Body @Valid EmpresaParceiraUpdateRequest request,
+                                             Authentication authentication) {
         AuthenticatedUser.requireOwnerOrAdmin(authentication, id);
-        return HttpResponse.ok(EmpresaParceiraResponseDTO.fromEntity(empresaService.atualizar(id, dto)));
+        return empresaService.atualizar(id, request);
     }
 
+    @Operation(summary = "Exclui (soft-delete) empresa")
+    @ApiResponse(responseCode = "204", description = "Empresa removida")
     @Delete("/{id}")
     @Secured(AuthenticatedUser.ROLE_ADMIN)
     public HttpResponse<Void> deletar(Long id) {
@@ -59,10 +73,10 @@ public class EmpresaParceiraController {
         return HttpResponse.noContent();
     }
 
+    @Operation(summary = "Lista trocas (cupons usados) de uma empresa")
     @Get("/{id}/trocas")
-    @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<List<TransacaoResponseDTO>> relatorioTrocas(Long id, Authentication authentication) {
+    public List<TransacaoResponse> relatorioTrocas(Long id, Authentication authentication) {
         AuthenticatedUser.requireOwnerOrAdmin(authentication, id);
-        return HttpResponse.ok(empresaService.listarTrocasPorEmpresa(id));
+        return empresaService.listarTrocasPorEmpresa(id);
     }
 }

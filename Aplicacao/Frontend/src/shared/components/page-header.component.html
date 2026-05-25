@@ -1,0 +1,13 @@
+<header class="page-header">
+  <div class="page-header__main">
+    <a *ngIf="backTo" [routerLink]="backTo" class="page-header__back">
+      <span class="material-icons" aria-hidden="true">arrow_back</span>
+      {{ backLabel }}
+    </a>
+    <h1 class="page-header__title">{{ title }}</h1>
+    <p *ngIf="subtitle" class="page-header__subtitle">{{ subtitle }}</p>
+  </div>
+  <div class="page-header__actions">
+    <ng-content></ng-content>
+  </div>
+</header>

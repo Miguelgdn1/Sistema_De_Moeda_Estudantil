@@ -1,0 +1,28 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      [title]="'Olá, ' + firstName"
+      subtitle="Acompanhe seu saldo de moedas e acesse rapidamente o que precisa."
+    ></app-page-header>
+
+    <section class="hero">
+      <div>
+        <div class="hero__label">Saldo atual</div>
+        <div class="hero__value"><span>M$</span>{{ saldo() }}</div>
+      </div>
+      <app-button variant="accent" size="lg" routerLink="/alunos/extrato">
+        <span class="material-icons">receipt_long</span>
+        Ver extrato
+      </app-button>
+    </section>
+
+    <div class="grid-2">
+      <app-card title="Extrato" subtitle="Histórico de transações recentes e saldo detalhado.">
+        <app-button variant="ghost" routerLink="/alunos/extrato">Acessar</app-button>
+      </app-card>
+      <app-card title="Meu perfil" subtitle="Atualize dados pessoais e altere sua senha.">
+        <app-button variant="ghost" routerLink="/alunos/editar-perfil">Editar</app-button>
+      </app-card>
+    </div>
+  </div>
+</app-shell>

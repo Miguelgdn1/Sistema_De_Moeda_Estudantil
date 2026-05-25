@@ -1,0 +1,24 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Meu extrato"
+      subtitle="Histórico de moedas distribuídas a alunos."
+      backTo="/professor/painel"
+    ></app-page-header>
+
+    <section class="balance" *ngIf="extrato() as e">
+      <div class="balance__label">Saldo restante</div>
+      <div class="balance__value"><span class="balance__unit">M$</span>{{ e.saldoAtual }}</div>
+    </section>
+
+    <section class="history">
+      <h2 class="history__title">Reconhecimentos enviados</h2>
+      <app-transaction-list
+        [loading]="loading()"
+        [transactions]="views()"
+        emptyTitle="Nenhuma distribuição ainda"
+        emptyDescription="Quando você enviar moedas a alunos, os reconhecimentos aparecerão aqui."
+      ></app-transaction-list>
+    </section>
+  </div>
+</app-shell>

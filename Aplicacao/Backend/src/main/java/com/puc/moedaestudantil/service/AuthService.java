@@ -1,42 +1,43 @@
 package com.puc.moedaestudantil.service;
 
-import com.puc.moedaestudantil.dto.LoginRequestDTO;
-import com.puc.moedaestudantil.dto.LoginResponseDTO;
-import com.puc.moedaestudantil.model.Administrador; // <-- Importante: Adicionada a importação
+import com.puc.moedaestudantil.dto.request.LoginRequest;
+import com.puc.moedaestudantil.dto.response.LoginResponse;
+import com.puc.moedaestudantil.exception.CredenciaisInvalidasException;
+import com.puc.moedaestudantil.model.Administrador;
 import com.puc.moedaestudantil.model.Aluno;
 import com.puc.moedaestudantil.model.EmpresaParceira;
 import com.puc.moedaestudantil.model.Professor;
 import com.puc.moedaestudantil.model.Usuario;
-import com.puc.moedaestudantil.repository.UsuarioDAO;
+import com.puc.moedaestudantil.repository.UsuarioRepository;
 import com.puc.moedaestudantil.security.JwtService;
 import com.puc.moedaestudantil.security.PasswordEncoder;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 @Singleton
 public class AuthService {
 
-    @Inject
-    private UsuarioDAO usuarioDAO;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    @Inject
-    private PasswordEncoder passwordEncoder;
+    public AuthService(UsuarioRepository usuarioRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtService jwtService) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
-    @Inject
-    private JwtService jwtService;
+    public LoginResponse login(LoginRequest request) {
+        Usuario usuario = usuarioRepository.findByEmailAndDeletedAtIsNull(request.email())
+            .orElseThrow(CredenciaisInvalidasException::new);
 
-    public LoginResponseDTO login(LoginRequestDTO dto) {
-        Usuario usuario = usuarioDAO.buscarPorEmail(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas."));
-
-        if (!passwordEncoder.matches(dto.getSenha(), usuario.getSenhaHash())) {
-            throw new IllegalArgumentException("Credenciais inválidas.");
+        if (!passwordEncoder.matches(request.senha(), usuario.getSenhaHash())) {
+            throw new CredenciaisInvalidasException();
         }
 
         String tipoUsuario;
         String nome;
-        
-        // Verificação dos perfis de usuário:
         if (usuario instanceof Aluno a) {
             tipoUsuario = "ALUNO";
             nome = a.getNome();
@@ -46,7 +47,7 @@ public class AuthService {
         } else if (usuario instanceof EmpresaParceira e) {
             tipoUsuario = "EMPRESA";
             nome = e.getNomeFantasia();
-        } else if (usuario instanceof Administrador admin) { // <-- A MÁGICA ACONTECE AQUI
+        } else if (usuario instanceof Administrador admin) {
             tipoUsuario = "ADMIN";
             nome = admin.getNome();
         } else {
@@ -55,6 +56,6 @@ public class AuthService {
         }
 
         String token = jwtService.gerarToken(usuario.getId(), usuario.getEmail(), tipoUsuario);
-        return new LoginResponseDTO(token, tipoUsuario, usuario.getId(), nome);
+        return new LoginResponse(token, tipoUsuario, usuario.getId(), nome);
     }
 }

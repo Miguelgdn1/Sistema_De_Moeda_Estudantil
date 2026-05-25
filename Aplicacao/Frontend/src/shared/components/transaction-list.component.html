@@ -1,0 +1,22 @@
+<section class="tx-list" aria-live="polite">
+  <ng-container *ngIf="loading; else loaded">
+    <div class="skeleton" *ngFor="let _ of [1,2,3]">
+      <div class="sk-circle"></div>
+      <div class="sk-lines">
+        <div class="sk-line w-50"></div>
+        <div class="sk-line w-25"></div>
+      </div>
+      <div class="sk-amount"></div>
+    </div>
+  </ng-container>
+  <ng-template #loaded>
+    <ng-container *ngIf="transactions.length; else empty">
+      <div role="list">
+        <app-transaction-item *ngFor="let tx of transactions" [transaction]="tx"></app-transaction-item>
+      </div>
+    </ng-container>
+    <ng-template #empty>
+      <app-empty-state icon="receipt_long" [title]="emptyTitle" [description]="emptyDescription"></app-empty-state>
+    </ng-template>
+  </ng-template>
+</section>

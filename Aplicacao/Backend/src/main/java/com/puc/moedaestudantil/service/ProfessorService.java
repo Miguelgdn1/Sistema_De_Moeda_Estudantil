@@ -1,18 +1,20 @@
 package com.puc.moedaestudantil.service;
 
-import com.puc.moedaestudantil.dto.DistribuirMoedasRequestDTO;
-import com.puc.moedaestudantil.dto.ExtratoResponseDTO;
-import com.puc.moedaestudantil.dto.TransacaoResponseDTO;
+import com.puc.moedaestudantil.dto.request.DistribuirMoedasRequest;
+import com.puc.moedaestudantil.dto.response.ExtratoResponse;
+import com.puc.moedaestudantil.dto.response.ProfessorResponse;
+import com.puc.moedaestudantil.dto.response.TransacaoResponse;
+import com.puc.moedaestudantil.exception.AlunoNaoEncontradoException;
+import com.puc.moedaestudantil.exception.ProfessorNaoEncontradoException;
+import com.puc.moedaestudantil.exception.SaldoInsuficienteException;
 import com.puc.moedaestudantil.model.Aluno;
 import com.puc.moedaestudantil.model.Professor;
-import com.puc.moedaestudantil.model.Transacao;
 import com.puc.moedaestudantil.model.TipoTransacao;
-import com.puc.moedaestudantil.repository.AlunoDAO;
-import com.puc.moedaestudantil.repository.ProfessorDAO;
-import com.puc.moedaestudantil.repository.TransacaoDAO;
-import jakarta.inject.Inject;
+import com.puc.moedaestudantil.model.Transacao;
+import com.puc.moedaestudantil.repository.AlunoRepository;
+import com.puc.moedaestudantil.repository.ProfessorRepository;
+import com.puc.moedaestudantil.repository.TransacaoRepository;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,62 +22,78 @@ import java.util.List;
 @Singleton
 public class ProfessorService {
 
-    @Inject
-    private ProfessorDAO professorDAO;
+    private final ProfessorRepository professorRepository;
+    private final AlunoRepository alunoRepository;
+    private final TransacaoRepository transacaoRepository;
 
-    @Inject
-    private AlunoDAO alunoDAO;
-
-    @Inject
-    private TransacaoDAO transacaoDAO;
-
-    public List<Professor> listarTodos() {
-        return professorDAO.listarTodos();
+    public ProfessorService(ProfessorRepository professorRepository,
+                            AlunoRepository alunoRepository,
+                            TransacaoRepository transacaoRepository) {
+        this.professorRepository = professorRepository;
+        this.alunoRepository = alunoRepository;
+        this.transacaoRepository = transacaoRepository;
     }
 
-    public Professor buscarPorId(Long id) {
-        return professorDAO.buscarPorId(id)
-                .orElseThrow(() -> new EntityNotFoundException("Professor não encontrado: id=" + id));
+    public List<ProfessorResponse> listarTodos() {
+        return professorRepository.findAllByDeletedAtIsNull().stream()
+            .map(this::toResponse)
+            .toList();
     }
 
-    public ExtratoResponseDTO obterExtrato(Long professorId) {
-        Professor professor = buscarPorId(professorId);
-        List<TransacaoResponseDTO> transacoes = transacaoDAO.listarPorProfessor(professorId).stream()
-                .map(TransacaoResponseDTO::fromEntity)
-                .toList();
-        return new ExtratoResponseDTO(professor.getSaldoMoedas(), transacoes);
+    public ProfessorResponse buscarPorId(Long id) {
+        return toResponse(carregar(id));
+    }
+
+    public ExtratoResponse obterExtrato(Long professorId) {
+        Professor professor = carregar(professorId);
+        List<TransacaoResponse> transacoes = transacaoRepository.listarPorProfessor(professorId).stream()
+            .map(TransacaoMapper::toResponse)
+            .toList();
+        return new ExtratoResponse(professor.getSaldoMoedas(), transacoes);
     }
 
     @Transactional
-    public TransacaoResponseDTO distribuirMoedas(Long professorId, DistribuirMoedasRequestDTO dto) {
-        Professor professor = professorDAO.buscarPorId(professorId)
-                .orElseThrow(() -> new EntityNotFoundException("Professor não encontrado: id=" + professorId));
+    public TransacaoResponse distribuirMoedas(Long professorId, DistribuirMoedasRequest request) {
+        Professor professor = carregar(professorId);
+        Aluno aluno = alunoRepository.findByIdAndDeletedAtIsNull(request.alunoId())
+            .orElseThrow(() -> new AlunoNaoEncontradoException(request.alunoId()));
 
-        Aluno aluno = alunoDAO.buscarPorId(dto.getAlunoId())
-                .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado: id=" + dto.getAlunoId()));
-
-        int quantidade = dto.getQuantidade();
+        int quantidade = request.quantidade();
         if (professor.getSaldoMoedas() < quantidade) {
-            throw new IllegalArgumentException(
-                "Saldo insuficiente: você tem " + professor.getSaldoMoedas()
-                    + " moedas e tentou enviar " + quantidade + ".");
+            throw new SaldoInsuficienteException(professor.getSaldoMoedas(), quantidade);
         }
 
         professor.setSaldoMoedas(professor.getSaldoMoedas() - quantidade);
         aluno.setSaldoMoedas(aluno.getSaldoMoedas() + quantidade);
-
-        professorDAO.atualizar(professor);
-        alunoDAO.atualizar(aluno);
+        professorRepository.update(professor);
+        alunoRepository.update(aluno);
 
         Transacao transacao = new Transacao();
         transacao.setTipo(TipoTransacao.ENVIO_MOEDA);
         transacao.setQuantidadeMoedas(quantidade);
         transacao.setDataHora(LocalDateTime.now());
-        transacao.setMensagem(dto.getMensagem());
+        transacao.setMensagem(request.mensagem());
         transacao.setProfessor(professor);
         transacao.setAluno(aluno);
 
-        transacaoDAO.salvar(transacao);
-        return TransacaoResponseDTO.fromEntity(transacao);
+        return TransacaoMapper.toResponse(transacaoRepository.save(transacao));
+    }
+
+    private Professor carregar(Long id) {
+        return professorRepository.findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new ProfessorNaoEncontradoException(id));
+    }
+
+    private ProfessorResponse toResponse(Professor p) {
+        return new ProfessorResponse(
+            p.getId(),
+            p.getNome(),
+            p.getEmail(),
+            p.getCpf(),
+            p.getDepartamento(),
+            p.getInstituicao() != null ? p.getInstituicao().getId() : null,
+            p.getInstituicao() != null ? p.getInstituicao().getNome() : null,
+            p.getSaldoMoedas()
+        );
     }
 }

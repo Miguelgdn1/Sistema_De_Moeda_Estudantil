@@ -1,0 +1,62 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Alunos"
+      subtitle="Gerencie os estudantes cadastrados na plataforma."
+    >
+      <app-button variant="primary" routerLink="/alunos/novo">
+        <span class="material-icons">add</span>
+        Novo aluno
+      </app-button>
+    </app-page-header>
+
+    <app-card [padded]="false">
+      @if (loading()) {
+        <div class="loading-row">
+          <span class="material-icons spin">progress_activity</span>
+          <span>Carregando…</span>
+        </div>
+      } @else if (alunos().length === 0) {
+        <app-empty-state
+          icon="group_off"
+          title="Nenhum aluno cadastrado"
+          description="Quando alunos se cadastrarem, eles aparecerão aqui."
+        ></app-empty-state>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>CPF</th>
+                <th>Curso</th>
+                <th>Instituição</th>
+                <th class="num">Saldo</th>
+                <th class="end">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of alunos()">
+                <td class="strong">{{ a.nome }}</td>
+                <td>{{ a.email }}</td>
+                <td><code>{{ a.cpf }}</code></td>
+                <td><span class="badge">{{ a.curso }}</span></td>
+                <td>{{ a.instituicaoNome }}</td>
+                <td class="num accent">M$ {{ a.saldoMoedas }}</td>
+                <td class="end actions">
+                  <button class="icon-btn" (click)="editar(a.id)" title="Editar">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="icon-btn icon-btn--danger" (click)="excluir(a)" title="Excluir">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-card>
+  </div>
+</app-shell>

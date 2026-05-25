@@ -1,0 +1,70 @@
+<app-shell>
+  <div class="container-narrow">
+    <app-page-header
+      [title]="isEdit() ? 'Editar empresa parceira' : 'Cadastrar empresa parceira'"
+      [subtitle]="isEdit() ? 'Atualize os dados da empresa.' : 'Cadastre-se para oferecer vantagens aos alunos.'"
+      [backTo]="isEdit() ? backTarget() : '/login'"
+    ></app-page-header>
+
+    <app-card>
+      <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="grid">
+          <app-form-field
+            class="span-2"
+            label="Nome fantasia"
+            [required]="true"
+            [hasError]="invalid('nomeFantasia')"
+            error="Nome fantasia é obrigatório"
+          >
+            <input type="text" formControlName="nomeFantasia" placeholder="Ex.: Padaria do Zé">
+          </app-form-field>
+
+          <app-form-field
+            label="CNPJ"
+            [required]="true"
+            hint="Apenas dígitos, 14 caracteres"
+            [hasError]="invalid('cnpj')"
+            error="CNPJ deve ter 14 dígitos numéricos"
+          >
+            <input type="text" formControlName="cnpj" placeholder="00000000000000" maxlength="14" inputmode="numeric">
+          </app-form-field>
+
+          <app-form-field
+            label="E-mail comercial"
+            [required]="true"
+            [hasError]="invalid('email')"
+            error="Informe um e-mail válido"
+          >
+            <input type="email" formControlName="email" placeholder="contato@empresa.com" autocomplete="email">
+          </app-form-field>
+
+          <app-form-field
+            class="span-2"
+            label="Senha"
+            [required]="!isEdit()"
+            [hint]="isEdit() ? 'Deixe em branco para manter a senha atual' : 'Mínimo 6 caracteres'"
+            [hasError]="invalid('senha')"
+            error="Senha deve ter no mínimo 6 caracteres"
+          >
+            <input type="password" formControlName="senha" [placeholder]="isEdit() ? '••••••••' : 'Pelo menos 6 caracteres'" autocomplete="new-password">
+          </app-form-field>
+
+          <app-form-field
+            class="span-2"
+            label="Descrição"
+            hint="Opcional — ramo de atuação ou diferencial"
+          >
+            <textarea formControlName="descricao" rows="3" placeholder="Breve descrição"></textarea>
+          </app-form-field>
+        </div>
+
+        <div class="actions">
+          <app-button variant="secondary" type="button" (click)="cancel()">Cancelar</app-button>
+          <app-button variant="primary" type="submit" [loading]="saving()" [disabled]="form.invalid">
+            {{ isEdit() ? 'Salvar alterações' : 'Cadastrar empresa' }}
+          </app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</app-shell>

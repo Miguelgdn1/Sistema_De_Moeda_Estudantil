@@ -1,0 +1,29 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      [title]="'Olá, Prof. ' + firstName()"
+      subtitle="Reconheça o mérito dos seus alunos com moedas estudantis."
+    ></app-page-header>
+
+    <section class="hero">
+      <div>
+        <div class="hero__label">Saldo disponível</div>
+        <div class="hero__value"><span>M$</span>{{ professor()?.saldoMoedas ?? 0 }}</div>
+        <div class="hero__hint">{{ professor()?.departamento }} · {{ professor()?.instituicaoNome }}</div>
+      </div>
+      <app-button variant="accent" size="lg" routerLink="/professor/distribuir">
+        <span class="material-icons">send</span>
+        Distribuir moedas
+      </app-button>
+    </section>
+
+    <div class="grid-2">
+      <app-card title="Distribuir moedas" subtitle="Reconheça um aluno enviando moedas com uma mensagem.">
+        <app-button variant="primary" routerLink="/professor/distribuir">Enviar agora</app-button>
+      </app-card>
+      <app-card title="Meu extrato" subtitle="Veja o histórico dos reconhecimentos que você já fez.">
+        <app-button variant="ghost" routerLink="/professor/extrato">Abrir extrato</app-button>
+      </app-card>
+    </div>
+  </div>
+</app-shell>

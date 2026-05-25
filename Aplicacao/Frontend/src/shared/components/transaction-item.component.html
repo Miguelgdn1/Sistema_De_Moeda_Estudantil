@@ -1,0 +1,15 @@
+<article class="tx" role="listitem">
+  <div class="tx__icon" [class.tx__icon--in]="transaction.direction === 'in'" [class.tx__icon--out]="transaction.direction === 'out'" aria-hidden="true">
+    <span class="material-icons">{{ transaction.direction === 'in' ? 'arrow_downward' : 'arrow_upward' }}</span>
+  </div>
+  <div class="tx__details">
+    <strong class="tx__desc">{{ transaction.descricao }}</strong>
+    <span class="tx__meta">
+      <time [attr.datetime]="iso(transaction.dataHora)">{{ transaction.dataHora | date:'dd/MM/yyyy HH:mm' }}</time>
+      <span *ngIf="transaction.contraparte"> · {{ transaction.contraparte }}</span>
+    </span>
+  </div>
+  <div class="tx__amount" [class.tx__amount--in]="transaction.direction === 'in'" [class.tx__amount--out]="transaction.direction === 'out'">
+    {{ transaction.direction === 'in' ? '+' : '−' }}{{ transaction.valor | number:'1.0-0' }} <span class="tx__unit">M$</span>
+  </div>
+</article>

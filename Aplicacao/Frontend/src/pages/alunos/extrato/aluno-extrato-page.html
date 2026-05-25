@@ -1,0 +1,50 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Extrato de moedas"
+      subtitle="Acompanhe seu saldo e o histórico de movimentações."
+      backTo="/alunos/painel"
+    ></app-page-header>
+
+    <section class="balance">
+      <div class="balance__label">Saldo atual</div>
+      <div class="balance__value">
+        <span class="balance__unit">M$</span>
+        {{ profile()?.saldoMoedas ?? 0 }}
+      </div>
+      <div class="balance__hint">Mantenha-se atento às novas movimentações</div>
+    </section>
+
+    <app-card title="Filtros" subtitle="Refine o histórico por período ou tipo de movimentação">
+      <div class="filters">
+        <app-form-field label="Período">
+          <div class="select-wrap">
+            <select [ngModel]="period()" (ngModelChange)="period.set($event)">
+              <option *ngFor="let p of periods" [value]="p.value">{{ p.label }}</option>
+            </select>
+            <span class="material-icons select-wrap__icon" aria-hidden="true">expand_more</span>
+          </div>
+        </app-form-field>
+
+        <app-form-field label="Tipo">
+          <div class="select-wrap">
+            <select [ngModel]="direction()" (ngModelChange)="direction.set($event)">
+              <option *ngFor="let d of directions" [value]="d.value">{{ d.label }}</option>
+            </select>
+            <span class="material-icons select-wrap__icon" aria-hidden="true">expand_more</span>
+          </div>
+        </app-form-field>
+      </div>
+    </app-card>
+
+    <section class="history">
+      <h2 class="history__title">Histórico</h2>
+      <app-transaction-list
+        [loading]="loading()"
+        [transactions]="filtered()"
+        emptyTitle="Sem movimentações neste período"
+        emptyDescription="Tente um filtro diferente ou aguarde novas transações."
+      ></app-transaction-list>
+    </section>
+  </div>
+</app-shell>

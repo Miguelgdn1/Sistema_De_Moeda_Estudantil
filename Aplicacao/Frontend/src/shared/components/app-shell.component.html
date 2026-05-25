@@ -1,0 +1,52 @@
+<div class="shell">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a routerLink="/home" class="brand">
+        <span class="brand__mark">SC</span>
+        <span class="brand__text">Student Coins</span>
+      </a>
+
+      <nav class="nav" *ngIf="navLinks().length" aria-label="Navegação principal">
+        <a *ngFor="let link of navLinks()"
+           [routerLink]="link.to"
+           routerLinkActive="nav__link--active"
+           class="nav__link">
+          <span class="material-icons" aria-hidden="true">{{ link.icon }}</span>
+          <span>{{ link.label }}</span>
+        </a>
+      </nav>
+
+      <div class="topbar__user">
+        <ng-container *ngIf="user(); else loggedOut">
+          <button class="user-menu" (click)="menuOpen.set(!menuOpen())" type="button">
+            <span class="user-menu__avatar">{{ initials() }}</span>
+            <span class="user-menu__name">{{ user()!.nome }}</span>
+            <span class="material-icons user-menu__caret">expand_more</span>
+          </button>
+          <div class="user-menu__dropdown" *ngIf="menuOpen()" (click)="menuOpen.set(false)">
+            <span class="user-menu__role">{{ user()!.tipoUsuario }}</span>
+            <button type="button" class="user-menu__item" (click)="logout()">
+              <span class="material-icons" aria-hidden="true">logout</span>
+              Sair
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #loggedOut>
+          <a routerLink="/login" class="btn-link">Entrar</a>
+        </ng-template>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell__main">
+    <div class="container shell__container">
+      <ng-content></ng-content>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span>© {{ year }} Student Coins</span>
+    </div>
+  </footer>
+</div>

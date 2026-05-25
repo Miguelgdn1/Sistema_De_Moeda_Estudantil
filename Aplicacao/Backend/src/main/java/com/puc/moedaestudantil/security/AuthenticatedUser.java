@@ -1,5 +1,6 @@
 package com.puc.moedaestudantil.security;
 
+import com.puc.moedaestudantil.exception.AcessoNegadoException;
 import io.micronaut.security.authentication.Authentication;
 
 public final class AuthenticatedUser {
@@ -41,13 +42,7 @@ public final class AuthenticatedUser {
 
     public static void requireOwnerOrAdmin(Authentication authentication, Long resourceId) {
         if (!isAdmin(authentication) && !isOwner(authentication, resourceId)) {
-            throw new ForbiddenException("Você não tem permissão para acessar este recurso.");
-        }
-    }
-
-    public static class ForbiddenException extends RuntimeException {
-        public ForbiddenException(String message) {
-            super(message);
+            throw new AcessoNegadoException("Voce nao tem permissao para acessar este recurso.");
         }
     }
 }

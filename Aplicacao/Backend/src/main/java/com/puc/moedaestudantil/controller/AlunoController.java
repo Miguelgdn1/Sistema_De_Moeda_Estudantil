@@ -1,57 +1,70 @@
 package com.puc.moedaestudantil.controller;
 
-import com.puc.moedaestudantil.dto.AlunoRequestDTO;
-import com.puc.moedaestudantil.dto.AlunoResponseDTO;
-import com.puc.moedaestudantil.model.Aluno;
+import com.puc.moedaestudantil.dto.request.AlunoRequest;
+import com.puc.moedaestudantil.dto.response.AlunoResponse;
 import com.puc.moedaestudantil.security.AuthenticatedUser;
 import com.puc.moedaestudantil.service.AlunoService;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.*;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Put;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
-import jakarta.inject.Inject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 
+@Tag(name = "Alunos")
 @Controller("/api/alunos")
+@Secured(SecurityRule.IS_AUTHENTICATED)
 public class AlunoController {
 
-    @Inject
-    private AlunoService alunoService;
+    private final AlunoService alunoService;
 
+    public AlunoController(AlunoService alunoService) {
+        this.alunoService = alunoService;
+    }
+
+    @Operation(summary = "Cadastra um aluno")
+    @ApiResponse(responseCode = "201", description = "Aluno criado")
     @Post
     @Secured(SecurityRule.IS_ANONYMOUS)
-    public HttpResponse<AlunoResponseDTO> cadastrar(@Body @Valid AlunoRequestDTO dto) {
-        Aluno novo = alunoService.cadastrar(dto);
-        return HttpResponse.created(AlunoResponseDTO.fromEntity(novo));
+    public HttpResponse<AlunoResponse> cadastrar(@Body @Valid AlunoRequest request) {
+        return HttpResponse.created(alunoService.cadastrar(request));
     }
 
+    @Operation(summary = "Lista todos os alunos ativos")
     @Get
     @Secured({AuthenticatedUser.ROLE_ADMIN, AuthenticatedUser.ROLE_PROFESSOR})
-    public HttpResponse<List<AlunoResponseDTO>> listar() {
-        List<AlunoResponseDTO> dtos = alunoService.listarTodos().stream()
-                .map(AlunoResponseDTO::fromEntity)
-                .toList();
-        return HttpResponse.ok(dtos);
+    public List<AlunoResponse> listar() {
+        return alunoService.listarTodos();
     }
 
+    @Operation(summary = "Busca aluno por ID")
     @Get("/{id}")
-    @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<AlunoResponseDTO> buscar(Long id, Authentication authentication) {
+    public AlunoResponse buscar(Long id, Authentication authentication) {
         if (!AuthenticatedUser.isAdmin(authentication)
-                && !AuthenticatedUser.hasRole(authentication, AuthenticatedUser.ROLE_PROFESSOR)) {
+            && !AuthenticatedUser.hasRole(authentication, AuthenticatedUser.ROLE_PROFESSOR)) {
             AuthenticatedUser.requireOwnerOrAdmin(authentication, id);
         }
-        return HttpResponse.ok(AlunoResponseDTO.fromEntity(alunoService.buscarPorId(id)));
+        return alunoService.buscarPorId(id);
     }
 
+    @Operation(summary = "Atualiza dados de um aluno (admin)")
     @Put("/{id}")
     @Secured(AuthenticatedUser.ROLE_ADMIN)
-    public HttpResponse<AlunoResponseDTO> atualizar(Long id, @Body @Valid AlunoRequestDTO dto) {
-        return HttpResponse.ok(AlunoResponseDTO.fromEntity(alunoService.atualizar(id, dto)));
+    public AlunoResponse atualizar(Long id, @Body @Valid AlunoRequest request) {
+        return alunoService.atualizar(id, request);
     }
 
+    @Operation(summary = "Exclui (soft-delete) um aluno")
+    @ApiResponse(responseCode = "204", description = "Aluno removido")
     @Delete("/{id}")
     @Secured(AuthenticatedUser.ROLE_ADMIN)
     public HttpResponse<Void> deletar(Long id) {

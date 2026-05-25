@@ -1,0 +1,74 @@
+<app-shell>
+  <div class="container-narrow">
+    <app-page-header
+      title="Meu perfil"
+      subtitle="Atualize seus dados pessoais. Campos de identidade são apenas leitura."
+      backTo="/alunos/painel"
+    ></app-page-header>
+
+    <ng-container *ngIf="loading(); else loaded">
+      <app-card>
+        <div class="loading-state">
+          <span class="material-icons spin">progress_activity</span>
+          <p>Carregando dados...</p>
+        </div>
+      </app-card>
+    </ng-container>
+
+    <ng-template #loaded>
+      <div class="profile-grid">
+        <app-card title="Dados pessoais">
+          <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+            <app-form-field
+              label="Nome completo"
+              [required]="true"
+              [hasError]="invalid('nome')"
+              error="Nome obrigatório (mínimo 3 caracteres)"
+            >
+              <input type="text" formControlName="nome">
+            </app-form-field>
+
+            <app-form-field
+              label="E-mail"
+              [required]="true"
+              [hasError]="invalid('email')"
+              error="E-mail inválido"
+            >
+              <input type="email" formControlName="email" autocomplete="email">
+            </app-form-field>
+
+            <app-form-field label="Endereço" hint="Opcional">
+              <textarea formControlName="endereco" rows="2" placeholder="Rua, número, bairro, cidade/UF"></textarea>
+            </app-form-field>
+
+            <app-form-field
+              label="Nova senha"
+              hint="Deixe em branco para manter"
+              [hasError]="invalid('senha')"
+              error="Senha deve ter no mínimo 6 caracteres"
+            >
+              <input type="password" formControlName="senha" autocomplete="new-password" placeholder="••••••••">
+            </app-form-field>
+
+            <div class="actions">
+              <app-button variant="secondary" type="button" (click)="cancel()">Cancelar</app-button>
+              <app-button variant="primary" type="submit" [loading]="saving()" [disabled]="form.invalid">
+                Salvar alterações
+              </app-button>
+            </div>
+          </form>
+        </app-card>
+
+        <app-card title="Informações de cadastro" subtitle="Estes campos são gerenciados pela instituição.">
+          <dl class="readonly">
+            <div><dt>CPF</dt><dd>{{ profile()?.cpf }}</dd></div>
+            <div><dt>RG</dt><dd>{{ profile()?.rg }}</dd></div>
+            <div><dt>Curso</dt><dd>{{ profile()?.curso }}</dd></div>
+            <div><dt>Instituição</dt><dd>{{ profile()?.instituicaoNome }}</dd></div>
+            <div><dt>Saldo de moedas</dt><dd class="strong">M$ {{ profile()?.saldoMoedas }}</dd></div>
+          </dl>
+        </app-card>
+      </div>
+    </ng-template>
+  </div>
+</app-shell>

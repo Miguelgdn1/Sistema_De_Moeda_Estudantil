@@ -1,0 +1,69 @@
+<app-shell>
+  <div class="container-narrow">
+    <app-page-header
+      title="Distribuir moedas"
+      subtitle="Reconheça o mérito de um aluno enviando moedas com uma mensagem aberta."
+      backTo="/professor/painel"
+    ></app-page-header>
+
+    <div class="balance-strip" *ngIf="professor() as p">
+      <span class="material-icons">monetization_on</span>
+      <div>
+        <div class="balance-strip__label">Saldo disponível</div>
+        <div class="balance-strip__value">M$ {{ p.saldoMoedas }}</div>
+      </div>
+    </div>
+
+    <app-card>
+      <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <app-form-field
+          label="Aluno"
+          [required]="true"
+          hint="Selecione o aluno que receberá o reconhecimento"
+          [hasError]="invalid('alunoId')"
+          error="Selecione um aluno"
+        >
+          <select formControlName="alunoId">
+            <option [ngValue]="0" disabled>Escolha um aluno</option>
+            @for (a of alunos(); track a.id) {
+              <option [ngValue]="a.id">{{ a.nome }} — {{ a.instituicaoNome }}</option>
+            }
+          </select>
+        </app-form-field>
+
+        <app-form-field
+          label="Quantidade de moedas"
+          [required]="true"
+          [hint]="'Mínimo 1, máximo ' + maxQuantidade()"
+          [hasError]="invalid('quantidade') || saldoInsuficiente()"
+          [error]="saldoInsuficiente() ? 'Saldo insuficiente para esta quantia' : 'Informe uma quantidade válida'"
+        >
+          <input type="number" formControlName="quantidade" [min]="1" [max]="maxQuantidade()" placeholder="0">
+        </app-form-field>
+
+        <app-form-field
+          label="Mensagem de reconhecimento"
+          [required]="true"
+          hint="Mínimo 10 caracteres — explique por que o aluno está sendo reconhecido"
+          [hasError]="invalid('mensagem')"
+          error="Mensagem deve ter no mínimo 10 caracteres"
+        >
+          <textarea formControlName="mensagem" rows="4" placeholder="Ex.: Excelente participação no debate de hoje."></textarea>
+        </app-form-field>
+
+        <div class="preview" *ngIf="quantidadeValida()">
+          <span class="material-icons-outlined">info</span>
+          <span>Após o envio, seu saldo passará de <strong>M$ {{ professor()?.saldoMoedas ?? 0 }}</strong> para <strong>M$ {{ saldoAposEnvio() }}</strong>.</span>
+        </div>
+
+        <div class="actions">
+          <app-button variant="secondary" type="button" (click)="cancel()">Cancelar</app-button>
+          <app-button variant="primary" type="submit" [loading]="saving()" [disabled]="form.invalid || saldoInsuficiente()">
+            <span class="material-icons">send</span>
+            Enviar moedas
+          </app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</app-shell>

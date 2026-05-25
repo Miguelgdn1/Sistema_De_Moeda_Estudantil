@@ -2,6 +2,7 @@ package com.puc.moedaestudantil.model;
 
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "usuario")
@@ -19,6 +20,9 @@ public abstract class Usuario {
     @Column(nullable = false, name = "senha_hash")
     private String senhaHash;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     public Usuario() {}
 
     public Long getId() { return id; }
@@ -29,4 +33,7 @@ public abstract class Usuario {
 
     public String getSenhaHash() { return senhaHash; }
     public void setSenhaHash(String senhaHash) { this.senhaHash = senhaHash; }
+
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 }

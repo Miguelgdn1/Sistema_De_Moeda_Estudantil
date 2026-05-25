@@ -1,0 +1,77 @@
+micronaut:
+  application:
+    name: moedaestudantil
+  server:
+    cors:
+      enabled: true
+      configurations:
+        web:
+          allowed-origins:
+            - ${CORS_ALLOWED_ORIGIN:`http://localhost:4200`}
+          allowed-methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          allowed-headers:
+            - Authorization
+            - Content-Type
+  security:
+    authentication: bearer
+    intercept-url-map:
+      - pattern: /swagger/**
+        access:
+          - isAnonymous()
+      - pattern: /swagger-ui/**
+        access:
+          - isAnonymous()
+    token:
+      jwt:
+        signatures:
+          secret:
+            generator:
+              secret: ${JWT_SECRET:`pleaseChangeThisSecretInProductionItMustBeAtLeast256bits`}
+        generator:
+          access-token:
+            expiration: 14400
+  router:
+    static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /swagger-ui/**
+      redoc:
+        paths: classpath:META-INF/swagger/views/redoc
+        mapping: /redoc/**
+
+datasources:
+  default:
+    db-type: postgres
+    dialect: POSTGRES
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL:`jdbc:postgresql://localhost:5432/moedaestudantil`}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    schema-generate: NONE
+
+flyway:
+  datasources:
+    default:
+      enabled: true
+      locations: classpath:db/migration
+      baseline-on-migrate: true
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: validate
+        show_sql: false
+
+jackson:
+  serialization:
+    writeDatesAsTimestamps: false

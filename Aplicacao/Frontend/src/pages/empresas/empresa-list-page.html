@@ -1,0 +1,58 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Empresas parceiras"
+      subtitle="Gerencie os parceiros que oferecem vantagens."
+    >
+      <app-button variant="primary" routerLink="/empresas/novo">
+        <span class="material-icons">add</span>
+        Nova empresa
+      </app-button>
+    </app-page-header>
+
+    <app-card [padded]="false">
+      @if (loading()) {
+        <div class="loading-row">
+          <span class="material-icons spin">progress_activity</span>
+          <span>Carregando…</span>
+        </div>
+      } @else if (empresas().length === 0) {
+        <app-empty-state
+          icon="storefront"
+          title="Nenhuma empresa cadastrada"
+          description="Quando empresas se cadastrarem, elas aparecerão aqui."
+        ></app-empty-state>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nome fantasia</th>
+                <th>CNPJ</th>
+                <th>E-mail</th>
+                <th>Descrição</th>
+                <th class="end">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of empresas()">
+                <td class="strong">{{ e.nomeFantasia }}</td>
+                <td><code>{{ e.cnpj }}</code></td>
+                <td>{{ e.email }}</td>
+                <td class="truncate">{{ e.descricao || '—' }}</td>
+                <td class="end actions">
+                  <button class="icon-btn" (click)="editar(e.id)" title="Editar">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="icon-btn icon-btn--danger" (click)="excluir(e)" title="Excluir">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-card>
+  </div>
+</app-shell>

@@ -1,0 +1,54 @@
+<app-shell>
+  <div class="container">
+    <section class="hero">
+      <div class="hero__copy">
+        <span class="eyebrow">Sistema de Moeda Estudantil</span>
+        <h1>Reconheça mérito acadêmico de forma simples e justa.</h1>
+        <p>Professores distribuem moedas como reconhecimento. Empresas parceiras oferecem vantagens. Alunos colhem os benefícios do esforço.</p>
+        <div class="hero__cta">
+          <ng-container *ngIf="!user(); else loggedActions">
+            <app-button variant="primary" size="lg" routerLink="/login">Entrar</app-button>
+            <app-button variant="secondary" size="lg" routerLink="/alunos/novo">Cadastrar como aluno</app-button>
+          </ng-container>
+          <ng-template #loggedActions>
+            <app-button variant="primary" size="lg" [routerLink]="homeRoute()">Ir para o painel</app-button>
+          </ng-template>
+        </div>
+      </div>
+      <div class="hero__art" aria-hidden="true">
+        <div class="badge-stack">
+          <div class="coin coin--1">M$</div>
+          <div class="coin coin--2">M$</div>
+          <div class="coin coin--3">M$</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="how">
+      <h2>Como funciona</h2>
+      <div class="grid-3 cards">
+        <app-card>
+          <div class="step">
+            <span class="material-icons step__icon">school</span>
+            <h3>Alunos cadastram-se</h3>
+            <p>Informe seus dados, escolha a instituição e participe do programa de mérito.</p>
+          </div>
+        </app-card>
+        <app-card>
+          <div class="step">
+            <span class="material-icons step__icon">redeem</span>
+            <h3>Professores reconhecem</h3>
+            <p>Cada professor recebe 1.000 moedas por semestre para distribuir como reconhecimento.</p>
+          </div>
+        </app-card>
+        <app-card>
+          <div class="step">
+            <span class="material-icons step__icon">storefront</span>
+            <h3>Empresas oferecem vantagens</h3>
+            <p>Parceiros cadastram benefícios para os alunos trocarem por moedas.</p>
+          </div>
+        </app-card>
+      </div>
+    </section>
+  </div>
+</app-shell>

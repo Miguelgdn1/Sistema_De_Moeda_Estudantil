@@ -1,95 +1,95 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
-import { adminGuard } from './core/guards/admin.guard';
-import { professorGuard } from './core/guards/professor.guard';
-import { IntroComponent } from './core/intro/intro.component';
-import { HomeComponent } from './features/home/home.component';
+import { authGuard } from '../guards/auth.guard';
+import { adminGuard } from '../guards/admin.guard';
+import { professorGuard } from '../guards/professor.guard';
+import { IntroPage } from '../pages/intro/intro-page';
+import { HomePage } from '../pages/home/home-page';
 
 export const routes: Routes = [
-  { path: '', component: IntroComponent },
-  { path: 'home', component: HomeComponent },
+  { path: '', component: IntroPage },
+  { path: 'home', component: HomePage },
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
+    loadComponent: () => import('../pages/auth/login-page').then((m) => m.LoginPage),
   },
 
   // ================= ROTAS DE ALUNO =================
   {
     path: 'alunos/novo',
-    loadComponent: () => import('./features/alunos/aluno-form.component').then((m) => m.AlunoFormComponent),
+    loadComponent: () => import('../pages/alunos/aluno-form-page').then((m) => m.AlunoFormPage),
   },
   {
     path: 'alunos/extrato',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/alunos/extrato/aluno-extrato.component').then((m) => m.AlunoExtratoComponent),
+    loadComponent: () => import('../pages/alunos/extrato/aluno-extrato-page').then((m) => m.AlunoExtratoPage),
   },
   {
     path: 'alunos/painel',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/alunos/aluno-dashboard.component').then((m) => m.AlunoDashboardComponent),
+    loadComponent: () => import('../pages/alunos/aluno-dashboard-page').then((m) => m.AlunoDashboardPage),
   },
   {
     path: 'alunos/editar-perfil',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/alunos/profile-edit.component').then((m) => m.ProfileEditComponent),
+    loadComponent: () => import('../pages/alunos/profile-edit-page').then((m) => m.ProfileEditPage),
   },
   {
     path: 'alunos/:id/editar',
     canActivate: [authGuard, adminGuard],
-    loadComponent: () => import('./features/alunos/aluno-form.component').then((m) => m.AlunoFormComponent),
+    loadComponent: () => import('../pages/alunos/aluno-form-page').then((m) => m.AlunoFormPage),
   },
   {
     path: 'alunos',
     canActivate: [authGuard, adminGuard],
-    loadComponent: () => import('./features/alunos/aluno-list.component').then((m) => m.AlunoListComponent),
+    loadComponent: () => import('../pages/alunos/aluno-list-page').then((m) => m.AlunoListPage),
   },
 
   // ================= ROTAS DE EMPRESA =================
   {
     path: 'empresas/novo',
-    loadComponent: () => import('./features/empresas/empresa-form.component').then((m) => m.EmpresaFormComponent),
+    loadComponent: () => import('../pages/empresas/empresa-form-page').then((m) => m.EmpresaFormPage),
   },
   {
     path: 'empresas/editar',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/empresas/empresa-form.component').then((m) => m.EmpresaFormComponent),
+    loadComponent: () => import('../pages/empresas/empresa-form-page').then((m) => m.EmpresaFormPage),
   },
   {
     path: 'empresas/vantagens',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/empresas/empresa-vantagens.component').then((m) => m.EmpresaVantagensComponent),
+    loadComponent: () => import('../pages/empresas/empresa-vantagens-page').then((m) => m.EmpresaVantagensPage),
   },
   {
     path: 'empresas/relatorio',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/empresas/empresa-relatorio.component').then((m) => m.EmpresaRelatorioComponent),
+    loadComponent: () => import('../pages/empresas/empresa-relatorio-page').then((m) => m.EmpresaRelatorioPage),
   },
   {
     path: 'empresas/:id/editar',
     canActivate: [authGuard, adminGuard],
-    loadComponent: () => import('./features/empresas/empresa-form.component').then((m) => m.EmpresaFormComponent),
+    loadComponent: () => import('../pages/empresas/empresa-form-page').then((m) => m.EmpresaFormPage),
   },
   {
     path: 'empresas',
     canActivate: [authGuard, adminGuard],
-    loadComponent: () => import('./features/empresas/empresa-list.component').then((m) => m.EmpresaListComponent),
+    loadComponent: () => import('../pages/empresas/empresa-list-page').then((m) => m.EmpresaListPage),
   },
 
   // ================= ROTAS DE PROFESSOR =================
   {
     path: 'professor/painel',
     canActivate: [authGuard, professorGuard],
-    loadComponent: () => import('./features/professor/professor-dashboard.component').then((m) => m.ProfessorDashboardComponent),
+    loadComponent: () => import('../pages/professor/professor-dashboard-page').then((m) => m.ProfessorDashboardPage),
   },
   {
     path: 'professor/distribuir',
     canActivate: [authGuard, professorGuard],
-    loadComponent: () => import('./features/professor/distribuir-moedas.component').then((m) => m.DistribuirMoedasComponent),
+    loadComponent: () => import('../pages/professor/distribuir-moedas-page').then((m) => m.DistribuirMoedasPage),
   },
   {
     path: 'professor/extrato',
     canActivate: [authGuard, professorGuard],
-    loadComponent: () => import('./features/professor/professor-extrato.component').then((m) => m.ProfessorExtratoComponent),
+    loadComponent: () => import('../pages/professor/professor-extrato-page').then((m) => m.ProfessorExtratoPage),
   },
 
   { path: '**', redirectTo: 'login' },

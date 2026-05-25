@@ -2,6 +2,7 @@ package com.puc.moedaestudantil.model;
 
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "instituicao")
@@ -21,6 +22,9 @@ public class Instituicao {
     @Column(columnDefinition = "TEXT")
     private String endereco;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     public Instituicao() {}
 
     public Long getId() { return id; }
@@ -34,4 +38,7 @@ public class Instituicao {
 
     public String getEndereco() { return endereco; }
     public void setEndereco(String endereco) { this.endereco = endereco; }
+
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 }
