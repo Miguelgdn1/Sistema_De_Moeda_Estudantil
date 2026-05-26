@@ -1,7 +1,7 @@
 <div class="auth">
   <aside class="auth__aside" aria-hidden="true">
     <a routerLink="/home" class="auth__brand">
-      <span class="brand-mark">SC</span>
+      <img class="brand-mark" src="/logo.png" alt="Student Coins">
       Student Coins
     </a>
 
@@ -12,9 +12,9 @@
       </div>
 
       <div class="coins-stage">
-        <span class="coin coin--lg">M$</span>
-        <span class="coin coin--md">M$</span>
-        <span class="coin coin--sm">M$</span>
+        <img class="coin coin--lg coin--logo" src="/logo.png" alt="Student Coins">
+        <img class="coin coin--md coin--logo" src="/logo.png" alt="">
+        <img class="coin coin--sm coin--logo" src="/logo.png" alt="">
         <span class="material-icons-outlined coins-stage__hint coins-stage__hint--left">savings</span>
         <span class="material-icons-outlined coins-stage__hint coins-stage__hint--right">redeem</span>
       </div>
@@ -28,80 +28,147 @@
   <section class="auth__panel">
     <div class="auth__panel-inner">
       <header class="auth__head">
-        <h1>{{ mode() === 'login' ? 'Entrar' : 'Criar conta' }}</h1>
-        <p>{{ mode() === 'login' ? 'Acesse sua conta para gerenciar suas moedas.' : 'Escolha o perfil que melhor descreve você.' }}</p>
+        <h1>
+          @switch (mode()) {
+            @case ('login') { Entrar }
+            @case ('signup') { Criar conta }
+            @case ('professor') { Login do professor }
+          }
+        </h1>
+        <p>
+          @switch (mode()) {
+            @case ('login') { Acesse sua conta para gerenciar suas moedas. }
+            @case ('signup') { Escolha o perfil que melhor descreve você. }
+            @case ('professor') { Selecione seu nome na lista e informe sua senha. }
+          }
+        </p>
       </header>
 
-      <ng-container *ngIf="mode() === 'login'; else signup">
-        <form class="auth__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-          <app-form-field
-            label="E-mail"
-            [required]="true"
-            [hasError]="!!(form.get('email')?.invalid && form.get('email')?.touched)"
-            error="Informe um e-mail válido"
-          >
-            <input type="email" formControlName="email" placeholder="voce@exemplo.com" autocomplete="email">
-          </app-form-field>
+      @switch (mode()) {
+        @case ('login') {
+          <form class="auth__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+            <app-form-field
+              label="E-mail"
+              [required]="true"
+              [hasError]="!!(form.get('email')?.invalid && form.get('email')?.touched)"
+              error="Informe um e-mail válido"
+            >
+              <input type="email" formControlName="email" placeholder="voce@exemplo.com" autocomplete="email">
+            </app-form-field>
 
-          <app-form-field
-            label="Senha"
-            [required]="true"
-            [hasError]="!!(form.get('senha')?.invalid && form.get('senha')?.touched)"
-            error="Senha obrigatória"
-          >
-            <div class="password-wrap">
-              <input [type]="showPassword() ? 'text' : 'password'" formControlName="senha" placeholder="••••••••" autocomplete="current-password">
-              <button type="button" class="password-toggle" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'">
-                <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
-              </button>
+            <app-form-field
+              label="Senha"
+              [required]="true"
+              [hasError]="!!(form.get('senha')?.invalid && form.get('senha')?.touched)"
+              error="Senha obrigatória"
+            >
+              <div class="password-wrap">
+                <input [type]="showPassword() ? 'text' : 'password'" formControlName="senha" placeholder="••••••••" autocomplete="current-password">
+                <button type="button" class="password-toggle" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'">
+                  <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+            </app-form-field>
+
+            <app-button variant="primary" size="lg" type="submit" [full]="true" [loading]="loading()" [disabled]="form.invalid">
+              Entrar
+            </app-button>
+
+            <button type="button" class="auth__alt" (click)="abrirSeletorProfessor()">
+              <span class="material-icons">badge</span>
+              Sou professor — entrar pelo seletor
+            </button>
+
+            <p class="auth__switch">
+              Ainda não tem conta?
+              <button type="button" class="link" (click)="mode.set('signup')">Criar agora</button>
+            </p>
+          </form>
+        }
+
+        @case ('professor') {
+          <form class="auth__form" [formGroup]="professorForm" (ngSubmit)="onSubmitProfessor()" novalidate>
+            <app-form-field
+              label="Professor"
+              [required]="true"
+              [hasError]="!!(professorForm.get('professorId')?.invalid && professorForm.get('professorId')?.touched)"
+              error="Selecione seu nome"
+            >
+              @if (professoresCarregando()) {
+                <div class="select-loading">
+                  <span class="material-icons spin">progress_activity</span>
+                  Carregando professores…
+                </div>
+              } @else {
+                <select formControlName="professorId">
+                  <option [ngValue]="0" disabled>Selecione seu nome</option>
+                  @for (p of professores(); track p.id) {
+                    <option [ngValue]="p.id">{{ p.nome }}</option>
+                  }
+                </select>
+              }
+            </app-form-field>
+
+            <app-form-field
+              label="Senha"
+              [required]="true"
+              [hasError]="!!(professorForm.get('senha')?.invalid && professorForm.get('senha')?.touched)"
+              error="Senha obrigatória"
+            >
+              <div class="password-wrap">
+                <input [type]="showPassword() ? 'text' : 'password'" formControlName="senha" placeholder="••••••••" autocomplete="current-password">
+                <button type="button" class="password-toggle" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'">
+                  <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+            </app-form-field>
+
+            <app-button variant="primary" size="lg" type="submit" [full]="true" [loading]="loading()" [disabled]="professorForm.invalid">
+              Entrar
+            </app-button>
+
+            <p class="auth__switch">
+              Não é professor?
+              <button type="button" class="link" (click)="mode.set('login')">Voltar ao login padrão</button>
+            </p>
+          </form>
+        }
+
+        @case ('signup') {
+          <div class="auth__signup">
+            <a routerLink="/alunos/novo" class="role-card">
+              <span class="material-icons role-card__icon">school</span>
+              <div>
+                <strong>Sou Aluno</strong>
+                <p>Cadastre-se para receber e gastar moedas estudantis.</p>
+              </div>
+              <span class="material-icons role-card__chevron">chevron_right</span>
+            </a>
+
+            <a routerLink="/empresas/novo" class="role-card">
+              <span class="material-icons role-card__icon">business</span>
+              <div>
+                <strong>Sou Empresa Parceira</strong>
+                <p>Ofereça vantagens em troca de moedas dos alunos.</p>
+              </div>
+              <span class="material-icons role-card__chevron">chevron_right</span>
+            </a>
+
+            <div class="role-card role-card--info">
+              <span class="material-icons role-card__icon">badge</span>
+              <div>
+                <strong>Sou Professor</strong>
+                <p>Professores são cadastrados pela instituição. Faça login com as credenciais recebidas.</p>
+              </div>
             </div>
-          </app-form-field>
 
-          <app-button variant="primary" size="lg" type="submit" [full]="true" [loading]="loading()" [disabled]="form.invalid">
-            Entrar
-          </app-button>
-
-          <p class="auth__switch">
-            Ainda não tem conta?
-            <button type="button" class="link" (click)="mode.set('signup')">Criar agora</button>
-          </p>
-        </form>
-      </ng-container>
-
-      <ng-template #signup>
-        <div class="auth__signup">
-          <a routerLink="/alunos/novo" class="role-card">
-            <span class="material-icons role-card__icon">school</span>
-            <div>
-              <strong>Sou Aluno</strong>
-              <p>Cadastre-se para receber e gastar moedas estudantis.</p>
-            </div>
-            <span class="material-icons role-card__chevron">chevron_right</span>
-          </a>
-
-          <a routerLink="/empresas/novo" class="role-card">
-            <span class="material-icons role-card__icon">business</span>
-            <div>
-              <strong>Sou Empresa Parceira</strong>
-              <p>Ofereça vantagens em troca de moedas dos alunos.</p>
-            </div>
-            <span class="material-icons role-card__chevron">chevron_right</span>
-          </a>
-
-          <div class="role-card role-card--info">
-            <span class="material-icons role-card__icon">badge</span>
-            <div>
-              <strong>Sou Professor</strong>
-              <p>Professores são cadastrados pela instituição. Faça login com as credenciais recebidas.</p>
-            </div>
+            <p class="auth__switch">
+              Já tem conta?
+              <button type="button" class="link" (click)="mode.set('login')">Entrar</button>
+            </p>
           </div>
-
-          <p class="auth__switch">
-            Já tem conta?
-            <button type="button" class="link" (click)="mode.set('login')">Entrar</button>
-          </p>
-        </div>
-      </ng-template>
+        }
+      }
 
       <a routerLink="/home" class="auth__back">
         <span class="material-icons">arrow_back</span>

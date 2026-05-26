@@ -15,6 +15,11 @@ interface LoginApiResponse {
   nome: string;
 }
 
+export interface ProfessorPublicoItem {
+  id: number;
+  nome: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -23,16 +28,29 @@ export class AuthService {
   login(credentials: LoginPayload): Observable<LoginResult> {
     return this.http.post<LoginApiResponse>(`${this.apiUrl}/login`, credentials).pipe(
       map((res) => this.toResult(res)),
-      tap((res) => {
-        sessionStorage.setItem(TOKEN_KEY, res.token);
-        const user: CurrentUser = {
-          id: res.usuarioId,
-          nome: res.nome,
-          tipoUsuario: res.tipoUsuario,
-        };
-        sessionStorage.setItem(USER_KEY, JSON.stringify(user));
-      })
+      tap((res) => this.persistir(res))
     );
+  }
+
+  loginProfessor(professorId: number, senha: string): Observable<LoginResult> {
+    return this.http.post<LoginApiResponse>(`${this.apiUrl}/login-professor`, { professorId, senha }).pipe(
+      map((res) => this.toResult(res)),
+      tap((res) => this.persistir(res))
+    );
+  }
+
+  listarProfessoresPublicos(): Observable<ProfessorPublicoItem[]> {
+    return this.http.get<ProfessorPublicoItem[]>(`${this.apiUrl}/professores`);
+  }
+
+  private persistir(res: LoginResult): void {
+    sessionStorage.setItem(TOKEN_KEY, res.token);
+    const user: CurrentUser = {
+      id: res.usuarioId,
+      nome: res.nome,
+      tipoUsuario: res.tipoUsuario,
+    };
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   logout(): void {

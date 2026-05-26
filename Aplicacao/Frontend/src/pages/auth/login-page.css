@@ -61,7 +61,21 @@
   font-weight: 800;
   box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 0 -3px 0 rgba(0,0,0,0.12);
 }
-.coin--lg { width: 88px; height: 88px; font-size: 22px; z-index: 3; }
+.coin--lg { width: 88px; height: 88px; font-size: 22px; z-index: 3; animation: float-lg 5s ease-in-out infinite; }
+.coin--logo {
+  background: transparent;
+  object-fit: contain;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: transform .25s ease-out, box-shadow .25s ease-out;
+}
+.coin--logo:hover {
+  animation-play-state: paused;
+  box-shadow: 0 14px 32px rgba(0,0,0,0.35);
+}
+.coin--lg.coin--logo:hover { transform: scale(1.18); }
+.coin--md.coin--logo:hover { transform: translate(-78px, 16px) scale(1.2); }
+.coin--sm.coin--logo:hover { transform: translate(72px, 20px) scale(1.2); }
 .coin--md { width: 60px; height: 60px; font-size: 15px; transform: translate(-78px, 20px); z-index: 2; animation: float-md 4.5s ease-in-out infinite; }
 .coin--sm { width: 50px; height: 50px; font-size: 13px; transform: translate(72px, 24px); z-index: 2; opacity: .9; animation: float-sm 4.5s ease-in-out infinite; }
 
@@ -81,6 +95,10 @@
   0%, 100% { transform: translate(72px, 24px); }
   50% { transform: translate(72px, 16px); }
 }
+@keyframes float-lg {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
 .auth__brand {
   color: #fff;
   font-weight: 700;
@@ -92,9 +110,8 @@
 .brand-mark {
   width: 36px; height: 36px;
   border-radius: var(--radius-md);
+  object-fit: contain;
   background: rgba(255,255,255,0.16);
-  display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 800;
 }
 .auth__tagline h2 {
   font-size: clamp(1.6rem, 3vw, 2.4rem);
@@ -198,3 +215,26 @@
 }
 .auth__back .material-icons { font-size: 18px; }
 .auth__back:hover { color: var(--color-brand); }
+
+.auth__alt {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: transparent;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: all .15s;
+}
+.auth__alt:hover { border-color: var(--color-brand); color: var(--color-brand); background: var(--color-brand-soft); }
+.auth__alt .material-icons { font-size: 18px; }
+
+.select-loading {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  color: var(--color-text-muted); font-size: var(--text-sm);
+  padding: var(--space-3) 0;
+}
+.select-loading .spin { animation: spin 1s linear infinite; font-size: 18px !important; }
+@keyframes spin { to { transform: rotate(360deg); } }
