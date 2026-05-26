@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-05-12T18:00:00.000Z",
+  "__export_date": "2026-05-25T19:00:00.000Z",
   "__export_source": "insomnia.desktop.app:v9.0.0",
   "resources": [
     {
@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "Sistema de Moeda Estudantil",
-      "description": "API do backend Micronaut — Lab03S02",
+      "description": "API do backend Micronaut — Lab03 + Lab04 (vantagens, resgate, cupons, notificações)",
       "scope": "collection"
     },
     {
@@ -19,10 +19,16 @@
       "name": "Base Environment",
       "data": {
         "base_url": "http://localhost:8080/api",
-        "token": ""
+        "token": "",
+        "alunoId": 1,
+        "professorId": 1,
+        "empresaId": 1,
+        "vantagemId": 1,
+        "codigoCupom": "TROCAR_PELO_CODIGO_RETORNADO"
       },
       "isPrivate": false
     },
+
     {
       "_id": "fld_auth",
       "_type": "request_group",
@@ -41,7 +47,7 @@
       "_id": "fld_alunos",
       "_type": "request_group",
       "parentId": "wrk_moeda",
-      "name": "3 — Alunos",
+      "name": "3 — Alunos (CRUD + perfil + extrato)",
       "metaSortKey": -80
     },
     {
@@ -52,7 +58,50 @@
       "metaSortKey": -70
     },
     {
-      "_id": "req_login",
+      "_id": "fld_professor",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "5 — Professor (distribuir + extrato)",
+      "metaSortKey": -60
+    },
+    {
+      "_id": "fld_vantagens",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "6 — Vantagens (CRUD + catálogo)",
+      "metaSortKey": -50
+    },
+    {
+      "_id": "fld_resgates",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "7 — Resgates (aluno)",
+      "metaSortKey": -40
+    },
+    {
+      "_id": "fld_cupons",
+      "_type": "request_group",
+      "parentId": "wrk_moeda",
+      "name": "8 — Cupons (validar + utilizar + QR)",
+      "metaSortKey": -30
+    },
+
+    {
+      "_id": "req_login_admin",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (admin seed)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@studentcoins.com\",\n  \"senha\": \"admin123\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_login_prof",
       "_type": "request",
       "parentId": "fld_auth",
       "name": "POST /auth/login (professor seed)",
@@ -63,13 +112,13 @@
         "text": "{\n  \"email\": \"joao.aramuni@puc.br\",\n  \"senha\": \"senha123\"\n}"
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "metaSortKey": -100
+      "metaSortKey": -90
     },
     {
       "_id": "req_login_aluno",
       "_type": "request",
       "parentId": "fld_auth",
-      "name": "POST /auth/login (aluno criado)",
+      "name": "POST /auth/login (aluno)",
       "method": "POST",
       "url": "{{ _.base_url }}/auth/login",
       "body": {
@@ -77,8 +126,23 @@
         "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"senha123\"\n}"
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "metaSortKey": -90
+      "metaSortKey": -80
     },
+    {
+      "_id": "req_login_emp",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (empresa)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"contato@parceira.com\",\n  \"senha\": \"senha123\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": -70
+    },
+
     {
       "_id": "req_inst_list",
       "_type": "request",
@@ -88,16 +152,17 @@
       "url": "{{ _.base_url }}/instituicoes",
       "metaSortKey": -100
     },
+
     {
       "_id": "req_aluno_post",
       "_type": "request",
       "parentId": "fld_alunos",
-      "name": "POST /alunos (cadastrar — público)",
+      "name": "POST /alunos (cadastro público com endereço estruturado)",
       "method": "POST",
       "url": "{{ _.base_url }}/alunos",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"senha123\",\n  \"cpf\": \"12345678900\",\n  \"rg\": \"MG1234567\",\n  \"nome\": \"Aluno Teste\",\n  \"endereco\": \"Rua A, 100 - Belo Horizonte/MG\",\n  \"curso\": \"Engenharia de Software\",\n  \"instituicaoId\": 1\n}"
+        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"senha123\",\n  \"cpf\": \"12345678900\",\n  \"rg\": \"MG1234567\",\n  \"nome\": \"Aluno Teste\",\n  \"telefone\": \"+5531999999999\",\n  \"cep\": \"30130100\",\n  \"logradouro\": \"Avenida Afonso Pena\",\n  \"numero\": \"1500\",\n  \"complemento\": \"Apto 302\",\n  \"bairro\": \"Centro\",\n  \"cidade\": \"Belo Horizonte\",\n  \"uf\": \"MG\",\n  \"curso\": \"Engenharia de Software\",\n  \"instituicaoId\": 1\n}"
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
       "metaSortKey": -100
@@ -106,7 +171,7 @@
       "_id": "req_aluno_list",
       "_type": "request",
       "parentId": "fld_alunos",
-      "name": "GET /alunos (autenticado)",
+      "name": "GET /alunos (admin/professor)",
       "method": "GET",
       "url": "{{ _.base_url }}/alunos",
       "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
@@ -116,9 +181,9 @@
       "_id": "req_aluno_get",
       "_type": "request",
       "parentId": "fld_alunos",
-      "name": "GET /alunos/{id}",
+      "name": "GET /alunos/{alunoId}",
       "method": "GET",
-      "url": "{{ _.base_url }}/alunos/1",
+      "url": "{{ _.base_url }}/alunos/{{ _.alunoId }}",
       "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
       "metaSortKey": -80
     },
@@ -126,12 +191,12 @@
       "_id": "req_aluno_put",
       "_type": "request",
       "parentId": "fld_alunos",
-      "name": "PUT /alunos/{id} (atualizar)",
+      "name": "PUT /alunos/{alunoId} (admin)",
       "method": "PUT",
-      "url": "{{ _.base_url }}/alunos/1",
+      "url": "{{ _.base_url }}/alunos/{{ _.alunoId }}",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"\",\n  \"cpf\": \"12345678900\",\n  \"rg\": \"MG1234567\",\n  \"nome\": \"Aluno Teste Atualizado\",\n  \"endereco\": \"Rua A, 100 - BH/MG\",\n  \"curso\": \"Engenharia de Software\",\n  \"instituicaoId\": 1\n}"
+        "text": "{\n  \"email\": \"aluno.teste@puc.br\",\n  \"senha\": \"\",\n  \"cpf\": \"12345678900\",\n  \"rg\": \"MG1234567\",\n  \"nome\": \"Aluno Teste Atualizado\",\n  \"telefone\": \"+5531988887777\",\n  \"cep\": \"30130100\",\n  \"logradouro\": \"Avenida Afonso Pena\",\n  \"numero\": \"1500\",\n  \"complemento\": \"Apto 302\",\n  \"bairro\": \"Centro\",\n  \"cidade\": \"Belo Horizonte\",\n  \"uf\": \"MG\",\n  \"curso\": \"Engenharia de Software\",\n  \"instituicaoId\": 1\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" },
@@ -143,17 +208,55 @@
       "_id": "req_aluno_del",
       "_type": "request",
       "parentId": "fld_alunos",
-      "name": "DELETE /alunos/{id}",
+      "name": "DELETE /alunos/{alunoId} (admin)",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/alunos/1",
+      "url": "{{ _.base_url }}/alunos/{{ _.alunoId }}",
       "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
       "metaSortKey": -60
     },
     {
+      "_id": "req_aluno_profile_get",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "GET /students/{alunoId}/profile (próprio ou admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/students/{{ _.alunoId }}/profile",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -50
+    },
+    {
+      "_id": "req_aluno_profile_put",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "PUT /students/{alunoId}/profile (próprio)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/students/{{ _.alunoId }}/profile",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Aluno Teste\",\n  \"email\": \"aluno.teste@puc.br\",\n  \"telefone\": \"+5531999999999\",\n  \"cep\": \"30130100\",\n  \"logradouro\": \"Avenida Afonso Pena\",\n  \"numero\": \"1500\",\n  \"complemento\": \"Apto 302\",\n  \"bairro\": \"Centro\",\n  \"cidade\": \"Belo Horizonte\",\n  \"uf\": \"MG\",\n  \"senha\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": -40
+    },
+    {
+      "_id": "req_aluno_extrato",
+      "_type": "request",
+      "parentId": "fld_alunos",
+      "name": "GET /students/{alunoId}/extrato",
+      "method": "GET",
+      "url": "{{ _.base_url }}/students/{{ _.alunoId }}/extrato",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -30
+    },
+
+    {
       "_id": "req_emp_post",
       "_type": "request",
       "parentId": "fld_empresas",
-      "name": "POST /empresas (cadastrar — público)",
+      "name": "POST /empresas (cadastro público)",
       "method": "POST",
       "url": "{{ _.base_url }}/empresas",
       "body": {
@@ -167,7 +270,7 @@
       "_id": "req_emp_list",
       "_type": "request",
       "parentId": "fld_empresas",
-      "name": "GET /empresas (autenticado)",
+      "name": "GET /empresas (admin)",
       "method": "GET",
       "url": "{{ _.base_url }}/empresas",
       "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
@@ -177,9 +280,9 @@
       "_id": "req_emp_get",
       "_type": "request",
       "parentId": "fld_empresas",
-      "name": "GET /empresas/{id}",
+      "name": "GET /empresas/{empresaId}",
       "method": "GET",
-      "url": "{{ _.base_url }}/empresas/1",
+      "url": "{{ _.base_url }}/empresas/{{ _.empresaId }}",
       "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
       "metaSortKey": -80
     },
@@ -187,9 +290,9 @@
       "_id": "req_emp_put",
       "_type": "request",
       "parentId": "fld_empresas",
-      "name": "PUT /empresas/{id} (atualizar)",
+      "name": "PUT /empresas/{empresaId}",
       "method": "PUT",
-      "url": "{{ _.base_url }}/empresas/1",
+      "url": "{{ _.base_url }}/empresas/{{ _.empresaId }}",
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"email\": \"contato@parceira.com\",\n  \"senha\": \"\",\n  \"cnpj\": \"12345678000199\",\n  \"nomeFantasia\": \"Restaurante Universitário PUC\",\n  \"descricao\": \"Atualizado: refeições com 30% off\"\n}"
@@ -204,11 +307,215 @@
       "_id": "req_emp_del",
       "_type": "request",
       "parentId": "fld_empresas",
-      "name": "DELETE /empresas/{id}",
+      "name": "DELETE /empresas/{empresaId} (admin)",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/empresas/1",
+      "url": "{{ _.base_url }}/empresas/{{ _.empresaId }}",
       "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
       "metaSortKey": -60
+    },
+    {
+      "_id": "req_emp_trocas",
+      "_type": "request",
+      "parentId": "fld_empresas",
+      "name": "GET /empresas/{empresaId}/trocas (relatório)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/empresas/{{ _.empresaId }}/trocas",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -50
+    },
+
+    {
+      "_id": "req_prof_list",
+      "_type": "request",
+      "parentId": "fld_professor",
+      "name": "GET /professores (admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/professores",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_prof_get",
+      "_type": "request",
+      "parentId": "fld_professor",
+      "name": "GET /professores/{professorId}",
+      "method": "GET",
+      "url": "{{ _.base_url }}/professores/{{ _.professorId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_prof_extrato",
+      "_type": "request",
+      "parentId": "fld_professor",
+      "name": "GET /professores/{professorId}/extrato",
+      "method": "GET",
+      "url": "{{ _.base_url }}/professores/{{ _.professorId }}/extrato",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_prof_distribuir",
+      "_type": "request",
+      "parentId": "fld_professor",
+      "name": "POST /professores/{professorId}/distribuir",
+      "method": "POST",
+      "url": "{{ _.base_url }}/professores/{{ _.professorId }}/distribuir",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"alunoId\": {{ _.alunoId }},\n  \"quantidade\": 200,\n  \"mensagem\": \"Excelente participação em aula. Parabéns pelo esforço!\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "description": "Logue como professor antes. Dispara 2 mensagens na fila email.queue.",
+      "metaSortKey": -70
+    },
+
+    {
+      "_id": "req_vant_post",
+      "_type": "request",
+      "parentId": "fld_vantagens",
+      "name": "POST /vantagens (empresa autenticada)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/vantagens",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"20% de desconto na cantina\",\n  \"descricao\": \"Válido para alunos durante o semestre letivo, em qualquer dia.\",\n  \"custoMoedas\": 50,\n  \"fotoUrl\": \"https://picsum.photos/seed/cantina/400/300\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "description": "Logue como empresa antes — a empresa proprietária é inferida do JWT.",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_vant_list",
+      "_type": "request",
+      "parentId": "fld_vantagens",
+      "name": "GET /vantagens (catálogo)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/vantagens",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_vant_emp",
+      "_type": "request",
+      "parentId": "fld_vantagens",
+      "name": "GET /vantagens/empresa/{empresaId}",
+      "method": "GET",
+      "url": "{{ _.base_url }}/vantagens/empresa/{{ _.empresaId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_vant_get",
+      "_type": "request",
+      "parentId": "fld_vantagens",
+      "name": "GET /vantagens/{vantagemId}",
+      "method": "GET",
+      "url": "{{ _.base_url }}/vantagens/{{ _.vantagemId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_vant_put",
+      "_type": "request",
+      "parentId": "fld_vantagens",
+      "name": "PUT /vantagens/{vantagemId} (empresa dona ou admin)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/vantagens/{{ _.vantagemId }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"30% de desconto na cantina\",\n  \"descricao\": \"Atualizado: agora com 30% de desconto, válido até dezembro.\",\n  \"custoMoedas\": 75,\n  \"fotoUrl\": \"https://picsum.photos/seed/cantina/400/300\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": -60
+    },
+    {
+      "_id": "req_vant_del",
+      "_type": "request",
+      "parentId": "fld_vantagens",
+      "name": "DELETE /vantagens/{vantagemId} (soft-delete)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/vantagens/{{ _.vantagemId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -50
+    },
+
+    {
+      "_id": "req_resg_post",
+      "_type": "request",
+      "parentId": "fld_resgates",
+      "name": "POST /resgates (aluno autenticado)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/resgates",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vantagemId\": {{ _.vantagemId }}\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "description": "Resgata uma vantagem. Retorna codigoCupom + qrCodeBase64. Publica 3 mensagens (e-mail aluno, e-mail empresa, WhatsApp).",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_resg_meus",
+      "_type": "request",
+      "parentId": "fld_resgates",
+      "name": "GET /resgates/meus (aluno autenticado)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/resgates/meus",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": -90
+    },
+
+    {
+      "_id": "req_cup_validar",
+      "_type": "request",
+      "parentId": "fld_cupons",
+      "name": "GET /cupons/{codigo}/validar (empresa ou admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/cupons/{{ _.codigoCupom }}/validar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Retorna status: VALIDO | EXPIRADO | UTILIZADO.",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_cup_utilizar",
+      "_type": "request",
+      "parentId": "fld_cupons",
+      "name": "POST /cupons/{codigo}/utilizar (empresa dona ou admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/cupons/{{ _.codigoCupom }}/utilizar",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "description": "Marca o cupom como utilizado. Idempotente — chamar de novo não altera o timestamp.",
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_cup_qr",
+      "_type": "request",
+      "parentId": "fld_cupons",
+      "name": "GET /cupons/{codigo}/qr-code (público — código é o segredo)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/cupons/{{ _.codigoCupom }}/qr-code",
+      "description": "Retorna image/png do QR Code. O endpoint é anônimo para que tags <img> consigam carregar.",
+      "metaSortKey": -80
     }
   ]
 }
