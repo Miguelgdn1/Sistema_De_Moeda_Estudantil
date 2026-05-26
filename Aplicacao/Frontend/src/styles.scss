@@ -2,7 +2,18 @@
 @use 'styles/reset';
 @use 'styles/utilities';
 
-// Snackbar com tom de marca
+// Snackbar com tom de marca — posicionado no canto superior direito (via app.config)
+.mat-mdc-snack-bar-container {
+  margin-top: var(--space-4) !important;
+  margin-right: var(--space-4) !important;
+
+  .mdc-snackbar__surface {
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+    min-width: 280px;
+  }
+}
+
 .mat-mdc-snack-bar-container.snackbar-success {
   --mdc-snackbar-container-color: var(--color-success);
   --mat-mdc-snack-bar-button-color: #ffffff;
@@ -11,6 +22,18 @@
 
 .mat-mdc-snack-bar-container.snackbar-error {
   --mdc-snackbar-container-color: var(--color-danger);
+  --mat-mdc-snack-bar-button-color: #ffffff;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-warning {
+  --mdc-snackbar-container-color: var(--color-warning);
+  --mat-mdc-snack-bar-button-color: #ffffff;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-info {
+  --mdc-snackbar-container-color: var(--color-brand);
   --mat-mdc-snack-bar-button-color: #ffffff;
   --mdc-snackbar-supporting-text-color: #ffffff;
 }
