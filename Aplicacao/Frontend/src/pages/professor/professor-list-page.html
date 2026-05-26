@@ -1,0 +1,75 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Professores"
+      subtitle="Gerencie os professores cadastrados na plataforma."
+    >
+      <app-button variant="primary" routerLink="/professores/novo">
+        <span class="material-icons">add</span>
+        Novo professor
+      </app-button>
+    </app-page-header>
+
+    <app-card [padded]="false">
+      @if (loading()) {
+        <div class="loading-row">
+          <span class="material-icons spin">progress_activity</span>
+          <span>Carregando…</span>
+        </div>
+      } @else if (professores().length === 0) {
+        <app-empty-state
+          icon="school"
+          title="Nenhum professor cadastrado"
+          description="Cadastre um professor para que ele possa distribuir moedas."
+        ></app-empty-state>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>CPF</th>
+                <th>Departamento</th>
+                <th>Instituição</th>
+                <th class="num">Saldo</th>
+                <th class="end">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of professores()">
+                <td class="strong">{{ p.nome }}</td>
+                <td>{{ p.email }}</td>
+                <td><code>{{ p.cpf }}</code></td>
+                <td><span class="badge">{{ p.departamento }}</span></td>
+                <td>{{ p.instituicaoNome }}</td>
+                <td class="num accent">M$ {{ p.saldoMoedas }}</td>
+                <td class="end actions">
+                  <button class="icon-btn" (click)="abrirAjuste(p)" title="Ajustar saldo">
+                    <span class="material-icons">paid</span>
+                  </button>
+                  <button class="icon-btn" (click)="editar(p.id)" title="Editar">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="icon-btn icon-btn--danger" (click)="excluir(p)" title="Excluir">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-card>
+  </div>
+
+  @if (ajusteAlvo(); as alvo) {
+    <app-saldo-dialog
+      [nome]="alvo.nome"
+      [saldoAtual]="alvo.saldoMoedas"
+      [loading]="ajusteSaving()"
+      (confirm)="confirmarAjuste($event)"
+      (cancel)="fecharAjuste()"
+    ></app-saldo-dialog>
+  }
+</app-shell>

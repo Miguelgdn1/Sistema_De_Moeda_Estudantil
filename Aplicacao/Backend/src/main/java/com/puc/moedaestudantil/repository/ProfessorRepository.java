@@ -13,5 +13,7 @@ public interface ProfessorRepository extends CrudRepository<Professor, Long> {
 
     Optional<Professor> findByCpf(String cpf);
 
+    boolean existsByCpf(String cpf);
+
     List<Professor> findAllByDeletedAtIsNull();
 }

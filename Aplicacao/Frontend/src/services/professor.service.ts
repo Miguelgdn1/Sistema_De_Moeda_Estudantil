@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../environments/environment';
-import { DistribuirMoedasPayload, ProfessorItem } from '../models/professor.model';
+import { DistribuirMoedasPayload, ProfessorItem, ProfessorPayload } from '../models/professor.model';
 import { ExtratoItem, TransacaoItem } from '../models/transacao.model';
 
 interface ProfessorApiResponse {
@@ -42,8 +42,36 @@ export class ProfessorService {
     );
   }
 
+  listar(): Observable<ProfessorItem[]> {
+    return this.http.get<ProfessorApiResponse[]>(this.apiUrl).pipe(
+      map((list) => list.map((p) => this.toItem(p)))
+    );
+  }
+
   getById(id: number): Observable<ProfessorItem> {
     return this.http.get<ProfessorApiResponse>(`${this.apiUrl}/${id}`).pipe(
+      map((p) => this.toItem(p))
+    );
+  }
+
+  cadastrar(payload: ProfessorPayload): Observable<ProfessorItem> {
+    return this.http.post<ProfessorApiResponse>(this.apiUrl, payload).pipe(
+      map((p) => this.toItem(p))
+    );
+  }
+
+  atualizar(id: number, payload: ProfessorPayload): Observable<ProfessorItem> {
+    return this.http.put<ProfessorApiResponse>(`${this.apiUrl}/${id}`, payload).pipe(
+      map((p) => this.toItem(p))
+    );
+  }
+
+  deletar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  ajustarSaldo(id: number, quantidade: number): Observable<ProfessorItem> {
+    return this.http.post<ProfessorApiResponse>(`${this.apiUrl}/${id}/saldo`, { quantidade }).pipe(
       map((p) => this.toItem(p))
     );
   }

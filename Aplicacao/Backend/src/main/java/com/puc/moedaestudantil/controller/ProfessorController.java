@@ -1,6 +1,8 @@
 package com.puc.moedaestudantil.controller;
 
+import com.puc.moedaestudantil.dto.request.AjusteSaldoRequest;
 import com.puc.moedaestudantil.dto.request.DistribuirMoedasRequest;
+import com.puc.moedaestudantil.dto.request.ProfessorRequest;
 import com.puc.moedaestudantil.dto.response.ExtratoResponse;
 import com.puc.moedaestudantil.dto.response.ProfessorResponse;
 import com.puc.moedaestudantil.dto.response.TransacaoResponse;
@@ -9,8 +11,10 @@ import com.puc.moedaestudantil.service.ProfessorService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Put;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
@@ -36,6 +40,30 @@ public class ProfessorController {
     @Secured(AuthenticatedUser.ROLE_ADMIN)
     public List<ProfessorResponse> listar() {
         return professorService.listarTodos();
+    }
+
+    @Operation(summary = "Cadastra um novo professor (admin)")
+    @ApiResponse(responseCode = "201", description = "Professor criado")
+    @Post
+    @Secured(AuthenticatedUser.ROLE_ADMIN)
+    public HttpResponse<ProfessorResponse> cadastrar(@Body @Valid ProfessorRequest request) {
+        return HttpResponse.created(professorService.cadastrar(request));
+    }
+
+    @Operation(summary = "Atualiza dados de um professor (admin)")
+    @Put("/{id}")
+    @Secured(AuthenticatedUser.ROLE_ADMIN)
+    public ProfessorResponse atualizar(Long id, @Body @Valid ProfessorRequest request) {
+        return professorService.atualizar(id, request);
+    }
+
+    @Operation(summary = "Exclui (soft-delete) um professor")
+    @ApiResponse(responseCode = "204", description = "Professor removido")
+    @Delete("/{id}")
+    @Secured(AuthenticatedUser.ROLE_ADMIN)
+    public HttpResponse<Void> deletar(Long id) {
+        professorService.deletar(id);
+        return HttpResponse.noContent();
     }
 
     @Operation(summary = "Retorna o perfil do professor autenticado")
@@ -69,5 +97,12 @@ public class ProfessorController {
                                                             Authentication authentication) {
         AuthenticatedUser.requireOwnerOrAdmin(authentication, id);
         return HttpResponse.created(professorService.distribuirMoedas(id, request));
+    }
+
+    @Operation(summary = "Ajusta saldo do professor (admin) — quantidade pode ser positiva ou negativa")
+    @Post("/{id}/saldo")
+    @Secured(AuthenticatedUser.ROLE_ADMIN)
+    public ProfessorResponse ajustarSaldo(Long id, @Body @Valid AjusteSaldoRequest request) {
+        return professorService.ajustarSaldo(id, request.quantidade());
     }
 }

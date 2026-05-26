@@ -62,7 +62,7 @@ public class DataSeeder {
         }
         Instituicao puc = instituicaoRepository.findAllByDeletedAtIsNull().get(0);
         Professor prof = new Professor();
-        prof.setEmail("joao.aramuni@puc.br");
+        prof.setEmail("henrique.carvalho1220@gmail.com");
         prof.setSenhaHash(passwordEncoder.hash("senha123"));
         prof.setCpf("11122233344");
         prof.setNome("Joao Paulo Aramuni");

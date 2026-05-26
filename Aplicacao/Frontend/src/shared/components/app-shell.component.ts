@@ -33,6 +33,8 @@ export class AppShellComponent {
       case 'ALUNO':
         return [
           { label: 'Painel', to: '/alunos/painel', icon: 'dashboard' },
+          { label: 'Vantagens', to: '/alunos/vantagens', icon: 'redeem' },
+          { label: 'Meus cupons', to: '/alunos/cupons', icon: 'confirmation_number' },
           { label: 'Extrato', to: '/alunos/extrato', icon: 'receipt_long' },
           { label: 'Perfil', to: '/alunos/editar-perfil', icon: 'person' },
         ];
@@ -51,6 +53,7 @@ export class AppShellComponent {
       case 'ADMIN':
         return [
           { label: 'Alunos', to: '/alunos', icon: 'group' },
+          { label: 'Professores', to: '/professores', icon: 'school' },
           { label: 'Empresas', to: '/empresas', icon: 'business' },
         ];
       default:

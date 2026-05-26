@@ -9,6 +9,15 @@ export interface ProfessorItem {
   saldoMoedas: number;
 }
 
+export interface ProfessorPayload {
+  nome: string;
+  email: string;
+  senha?: string;
+  cpf: string;
+  departamento: string;
+  instituicaoId: number;
+}
+
 export interface DistribuirMoedasPayload {
   alunoId: number;
   quantidade: number;
