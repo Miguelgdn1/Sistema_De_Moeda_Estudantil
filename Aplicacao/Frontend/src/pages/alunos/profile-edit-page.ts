@@ -7,11 +7,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProfileService } from '../../services/profile.service';
 import { AuthService } from '../../services/auth.service';
 import { AlunoItem, AlunoProfileUpdatePayload } from '../../models/aluno.model';
+import { EnderecoEstruturado } from '../../models/endereco.model';
 import { AppShellComponent } from '../../shared/components/app-shell.component';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { CardComponent } from '../../shared/components/card.component';
 import { ButtonComponent } from '../../shared/components/button.component';
 import { FormFieldComponent } from '../../shared/components/form-field.component';
+import { CepInputComponent } from '../../shared/components/cep-input.component';
 
 @Component({
   standalone: true,
@@ -24,6 +26,7 @@ import { FormFieldComponent } from '../../shared/components/form-field.component
     CardComponent,
     ButtonComponent,
     FormFieldComponent,
+    CepInputComponent,
   ],
   templateUrl: './profile-edit-page.html',
   styleUrl: './profile-edit-page.css',
@@ -48,7 +51,14 @@ export class ProfileEditPage implements OnInit {
   protected form = this.fb.nonNullable.group({
     nome: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    endereco: [''],
+    telefone: ['', Validators.pattern(/^\+[1-9]\d{1,14}$/)],
+    cep: [''],
+    logradouro: [''],
+    numero: [''],
+    complemento: [''],
+    bairro: [''],
+    cidade: [''],
+    uf: [''],
     senha: ['', [Validators.minLength(6)]],
   });
 
@@ -63,7 +73,18 @@ export class ProfileEditPage implements OnInit {
       .subscribe({
         next: (p) => {
           this.profile.set(p);
-          this.form.patchValue({ nome: p.nome, email: p.email, endereco: p.endereco ?? '' });
+          this.form.patchValue({
+            nome: p.nome,
+            email: p.email,
+            telefone: p.telefone ?? '',
+            cep: p.cep ?? '',
+            logradouro: p.logradouro ?? '',
+            numero: p.numero ?? '',
+            complemento: p.complemento ?? '',
+            bairro: p.bairro ?? '',
+            cidade: p.cidade ?? '',
+            uf: p.uf ?? '',
+          });
           this.loading.set(false);
         },
         error: (err) => {
@@ -71,6 +92,17 @@ export class ProfileEditPage implements OnInit {
           this.handleError(err, 'Erro ao carregar perfil.');
         },
       });
+  }
+
+  protected onCepEncontrado(endereco: EnderecoEstruturado): void {
+    this.form.patchValue({
+      cep: endereco.cep ?? this.form.controls.cep.value,
+      logradouro: endereco.logradouro ?? '',
+      bairro: endereco.bairro ?? '',
+      cidade: endereco.cidade ?? '',
+      uf: endereco.uf ?? '',
+      complemento: endereco.complemento ?? this.form.controls.complemento.value,
+    });
   }
 
   cancel(): void {
@@ -92,7 +124,14 @@ export class ProfileEditPage implements OnInit {
     const payload: AlunoProfileUpdatePayload = {
       nome: v.nome,
       email: v.email,
-      endereco: v.endereco?.trim() || undefined,
+      telefone: v.telefone?.trim() || undefined,
+      cep: v.cep || undefined,
+      logradouro: v.logradouro || undefined,
+      numero: v.numero || undefined,
+      complemento: v.complemento || undefined,
+      bairro: v.bairro || undefined,
+      cidade: v.cidade || undefined,
+      uf: v.uf || undefined,
       senha: v.senha?.trim() || undefined,
     };
 

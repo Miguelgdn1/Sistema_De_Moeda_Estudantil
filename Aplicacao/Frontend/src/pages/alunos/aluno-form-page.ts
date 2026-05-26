@@ -6,12 +6,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AlunoService } from '../../services/aluno.service';
 import { InstituicaoService } from '../../services/instituicao.service';
 import { AlunoPayload } from '../../models/aluno.model';
+import { EnderecoEstruturado } from '../../models/endereco.model';
 import { InstituicaoItem } from '../../models/instituicao.model';
 import { AppShellComponent } from '../../shared/components/app-shell.component';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { CardComponent } from '../../shared/components/card.component';
 import { ButtonComponent } from '../../shared/components/button.component';
 import { FormFieldComponent } from '../../shared/components/form-field.component';
+import { CepInputComponent } from '../../shared/components/cep-input.component';
 
 const CURSOS = [
   'Administração', 'Análise e Desenvolvimento de Sistemas', 'Arquitetura e Urbanismo',
@@ -35,6 +37,7 @@ const CURSOS = [
     CardComponent,
     ButtonComponent,
     FormFieldComponent,
+    CepInputComponent,
   ],
   templateUrl: './aluno-form-page.html',
   styleUrl: './aluno-form-page.css',
@@ -64,8 +67,15 @@ export class AlunoFormPage implements OnInit {
     senha: [''],
     cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     rg: ['', Validators.required],
+    telefone: ['', Validators.pattern(/^\+[1-9]\d{1,14}$/)],
     curso: ['', Validators.required],
-    endereco: [''],
+    cep: [''],
+    logradouro: [''],
+    numero: [''],
+    complemento: [''],
+    bairro: [''],
+    cidade: [''],
+    uf: [''],
     instituicaoId: [0, [Validators.required, Validators.min(1)]],
   });
 
@@ -83,8 +93,15 @@ export class AlunoFormPage implements OnInit {
           email: a.email,
           cpf: a.cpf,
           rg: a.rg,
+          telefone: a.telefone ?? '',
           curso: a.curso,
-          endereco: a.endereco ?? '',
+          cep: a.cep ?? '',
+          logradouro: a.logradouro ?? '',
+          numero: a.numero ?? '',
+          complemento: a.complemento ?? '',
+          bairro: a.bairro ?? '',
+          cidade: a.cidade ?? '',
+          uf: a.uf ?? '',
           instituicaoId: a.instituicaoId,
           senha: '',
         }),
@@ -94,6 +111,17 @@ export class AlunoFormPage implements OnInit {
       this.form.controls.senha.addValidators([Validators.required, Validators.minLength(6)]);
       this.form.controls.senha.updateValueAndValidity();
     }
+  }
+
+  protected onCepEncontrado(endereco: EnderecoEstruturado): void {
+    this.form.patchValue({
+      cep: endereco.cep ?? this.form.controls.cep.value,
+      logradouro: endereco.logradouro ?? '',
+      bairro: endereco.bairro ?? '',
+      cidade: endereco.cidade ?? '',
+      uf: endereco.uf ?? '',
+      complemento: endereco.complemento ?? this.form.controls.complemento.value,
+    });
   }
 
   cancel(): void {
@@ -106,7 +134,24 @@ export class AlunoFormPage implements OnInit {
       return;
     }
     this.saving.set(true);
-    const dto = this.form.getRawValue() as AlunoPayload;
+    const raw = this.form.getRawValue();
+    const dto: AlunoPayload = {
+      nome: raw.nome,
+      email: raw.email,
+      senha: raw.senha,
+      cpf: raw.cpf,
+      rg: raw.rg,
+      telefone: raw.telefone || undefined,
+      curso: raw.curso,
+      cep: raw.cep || undefined,
+      logradouro: raw.logradouro || undefined,
+      numero: raw.numero || undefined,
+      complemento: raw.complemento || undefined,
+      bairro: raw.bairro || undefined,
+      cidade: raw.cidade || undefined,
+      uf: raw.uf || undefined,
+      instituicaoId: raw.instituicaoId,
+    };
     const obs = this.isEdit()
       ? this.alunoService.atualizar(this.alunoId()!, dto)
       : this.alunoService.cadastrar(dto);

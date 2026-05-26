@@ -47,6 +47,15 @@
           </app-form-field>
 
           <app-form-field
+            label="Telefone (WhatsApp)"
+            hint="Formato internacional. Ex.: +5531999999999"
+            [hasError]="invalid('telefone')"
+            error="Use o formato E.164 (ex.: +5531999999999)"
+          >
+            <input type="tel" formControlName="telefone" placeholder="+5531999999999" autocomplete="tel">
+          </app-form-field>
+
+          <app-form-field
             label="Curso"
             [required]="true"
             [hasError]="invalid('curso')"
@@ -74,12 +83,36 @@
             </select>
           </app-form-field>
 
-          <app-form-field
-            class="span-2"
-            label="Endereço"
-            hint="Opcional"
-          >
-            <input type="text" formControlName="endereco" placeholder="Rua, número, bairro, cidade/UF">
+          <app-form-field label="CEP" hint="Digite o CEP para preencher automaticamente">
+            <app-cep-input
+              [value]="form.controls.cep.value"
+              (valueChange)="form.controls.cep.setValue($event)"
+              (enderecoEncontrado)="onCepEncontrado($event)"
+            ></app-cep-input>
+          </app-form-field>
+
+          <app-form-field label="Logradouro">
+            <input type="text" formControlName="logradouro" placeholder="Rua, avenida..." autocomplete="street-address">
+          </app-form-field>
+
+          <app-form-field label="Número">
+            <input type="text" formControlName="numero" placeholder="Ex.: 123">
+          </app-form-field>
+
+          <app-form-field label="Complemento">
+            <input type="text" formControlName="complemento" placeholder="Apto, sala, bloco...">
+          </app-form-field>
+
+          <app-form-field label="Bairro">
+            <input type="text" formControlName="bairro">
+          </app-form-field>
+
+          <app-form-field label="Cidade">
+            <input type="text" formControlName="cidade">
+          </app-form-field>
+
+          <app-form-field label="UF">
+            <input type="text" formControlName="uf" maxlength="2" placeholder="MG" style="text-transform: uppercase;">
           </app-form-field>
 
           <app-form-field

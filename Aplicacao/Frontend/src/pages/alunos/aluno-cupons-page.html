@@ -1,0 +1,70 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Meus cupons"
+      subtitle="Vantagens que voce ja resgatou."
+      backTo="/alunos/painel"
+    ></app-page-header>
+
+    <ng-container *ngIf="loading(); else conteudo">
+      <app-card>
+        <div class="loading">
+          <span class="material-icons spin">progress_activity</span>
+          <p>Carregando cupons...</p>
+        </div>
+      </app-card>
+    </ng-container>
+
+    <ng-template #conteudo>
+      <app-card *ngIf="isEmpty()" [padded]="false">
+        <app-empty-state
+          icon="redeem"
+          title="Voce ainda nao tem cupons"
+          description="Resgate uma vantagem no catalogo para receber seu primeiro cupom."
+        ></app-empty-state>
+      </app-card>
+
+      <div class="grid" *ngIf="cupons().length > 0">
+        <article class="cupom-card" *ngFor="let c of cupons()" (click)="abrir(c)">
+          <div class="topo">
+            <h3>{{ c.vantagemNome || 'Vantagem' }}</h3>
+            <span [class]="statusClass(c.status)">{{ statusLabel(c.status) }}</span>
+          </div>
+          <p class="empresa" *ngIf="c.empresaNomeFantasia">{{ c.empresaNomeFantasia }}</p>
+          <div class="codigo">{{ c.codigoCupom }}</div>
+          <div class="meta">
+            <span>Resgatado em {{ c.dataHora | date:'dd/MM/yyyy' }}</span>
+            <span *ngIf="c.dataExpiracao">Valido ate {{ c.dataExpiracao | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </article>
+      </div>
+    </ng-template>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="cupomAberto() as c" (click)="fechar()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ c.vantagemNome }}</h3>
+      <p class="empresa" *ngIf="c.empresaNomeFantasia">{{ c.empresaNomeFantasia }}</p>
+      <span [class]="statusClass(c.status)">{{ statusLabel(c.status) }}</span>
+
+      <div class="qr-wrap" *ngIf="c.codigoCupom">
+        <img [src]="qrUrl(c.codigoCupom)" alt="QR Code">
+      </div>
+
+      <div class="codigo-box">
+        <span class="codigo-label">CODIGO</span>
+        <span class="codigo-value">{{ c.codigoCupom }}</span>
+      </div>
+
+      <div class="info">
+        <p>Resgatado em <strong>{{ c.dataHora | date:'dd/MM/yyyy HH:mm' }}</strong></p>
+        <p *ngIf="c.dataExpiracao">Valido ate <strong>{{ c.dataExpiracao | date:'dd/MM/yyyy HH:mm' }}</strong></p>
+        <p *ngIf="c.cupomUsadoEm">Utilizado em <strong>{{ c.cupomUsadoEm | date:'dd/MM/yyyy HH:mm' }}</strong></p>
+      </div>
+
+      <div class="modal-acoes">
+        <app-button variant="primary" (click)="fechar()">Fechar</app-button>
+      </div>
+    </div>
+  </div>
+</app-shell>

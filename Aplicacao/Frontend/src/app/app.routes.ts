@@ -34,6 +34,16 @@ export const routes: Routes = [
     loadComponent: () => import('../pages/alunos/profile-edit-page').then((m) => m.ProfileEditPage),
   },
   {
+    path: 'alunos/vantagens',
+    canActivate: [authGuard],
+    loadComponent: () => import('../pages/alunos/aluno-vantagens-page').then((m) => m.AlunoVantagensPage),
+  },
+  {
+    path: 'alunos/cupons',
+    canActivate: [authGuard],
+    loadComponent: () => import('../pages/alunos/aluno-cupons-page').then((m) => m.AlunoCuponsPage),
+  },
+  {
     path: 'alunos/:id/editar',
     canActivate: [authGuard, adminGuard],
     loadComponent: () => import('../pages/alunos/aluno-form-page').then((m) => m.AlunoFormPage),
@@ -58,6 +68,16 @@ export const routes: Routes = [
     path: 'empresas/vantagens',
     canActivate: [authGuard],
     loadComponent: () => import('../pages/empresas/empresa-vantagens-page').then((m) => m.EmpresaVantagensPage),
+  },
+  {
+    path: 'empresas/vantagens/nova',
+    canActivate: [authGuard],
+    loadComponent: () => import('../pages/empresas/vantagem-form-page').then((m) => m.VantagemFormPage),
+  },
+  {
+    path: 'empresas/vantagens/:id/editar',
+    canActivate: [authGuard],
+    loadComponent: () => import('../pages/empresas/vantagem-form-page').then((m) => m.VantagemFormPage),
   },
   {
     path: 'empresas/relatorio',
@@ -90,6 +110,23 @@ export const routes: Routes = [
     path: 'professor/extrato',
     canActivate: [authGuard, professorGuard],
     loadComponent: () => import('../pages/professor/professor-extrato-page').then((m) => m.ProfessorExtratoPage),
+  },
+
+  // CRUD admin de professores
+  {
+    path: 'professores/novo',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('../pages/professor/professor-form-page').then((m) => m.ProfessorFormPage),
+  },
+  {
+    path: 'professores/:id/editar',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('../pages/professor/professor-form-page').then((m) => m.ProfessorFormPage),
+  },
+  {
+    path: 'professores',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('../pages/professor/professor-list-page').then((m) => m.ProfessorListPage),
   },
 
   { path: '**', redirectTo: 'login' },

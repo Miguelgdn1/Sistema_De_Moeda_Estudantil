@@ -3,14 +3,59 @@
     <app-page-header
       title="Vantagens"
       subtitle="Ofertas que sua empresa disponibiliza aos alunos."
-    ></app-page-header>
+    >
+      <app-button variant="primary" (click)="nova()">+ Nova vantagem</app-button>
+    </app-page-header>
 
-    <app-card [padded]="false">
-      <app-empty-state
-        icon="redeem"
-        title="Você ainda não cadastrou vantagens"
-        description="Em breve será possível cadastrar produtos e descontos que os alunos poderão resgatar com suas moedas."
-      ></app-empty-state>
-    </app-card>
+    <ng-container *ngIf="loading(); else listado">
+      <app-card>
+        <div class="loading">
+          <span class="material-icons spin">progress_activity</span>
+          <p>Carregando...</p>
+        </div>
+      </app-card>
+    </ng-container>
+
+    <ng-template #listado>
+      <app-card *ngIf="isEmpty(); else lista" [padded]="false">
+        <app-empty-state
+          icon="redeem"
+          title="Voce ainda nao cadastrou vantagens"
+          description="Clique em 'Nova vantagem' para criar a primeira oferta."
+        ></app-empty-state>
+      </app-card>
+
+      <ng-template #lista>
+        <app-card [padded]="false">
+          <table class="vantagens-table">
+            <thead>
+              <tr>
+                <th class="col-foto">Foto</th>
+                <th>Nome</th>
+                <th>Custo</th>
+                <th class="col-acoes">Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of vantagens()">
+                <td class="col-foto">
+                  <img *ngIf="v.fotoUrl; else semFoto" [src]="v.fotoUrl" [alt]="v.nome" class="thumb">
+                  <ng-template #semFoto><div class="thumb thumb-placeholder">M$</div></ng-template>
+                </td>
+                <td>
+                  <div class="nome">{{ v.nome }}</div>
+                  <div class="descricao">{{ v.descricao || '—' }}</div>
+                </td>
+                <td class="custo">M$ {{ v.custoMoedas }}</td>
+                <td class="col-acoes">
+                  <app-button variant="secondary" size="sm" (click)="editar(v)">Editar</app-button>
+                  <app-button variant="danger" size="sm" (click)="excluir(v)">Excluir</app-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </app-card>
+      </ng-template>
+    </ng-template>
   </div>
 </app-shell>

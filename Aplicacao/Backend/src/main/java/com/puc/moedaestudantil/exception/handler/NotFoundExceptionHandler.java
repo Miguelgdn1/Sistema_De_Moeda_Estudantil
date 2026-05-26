@@ -2,6 +2,7 @@ package com.puc.moedaestudantil.exception.handler;
 
 import com.puc.moedaestudantil.dto.response.ErroResponse;
 import com.puc.moedaestudantil.exception.AlunoNaoEncontradoException;
+import com.puc.moedaestudantil.exception.CupomNaoEncontradoException;
 import com.puc.moedaestudantil.exception.EmpresaNaoEncontradaException;
 import com.puc.moedaestudantil.exception.InstituicaoNaoEncontradaException;
 import com.puc.moedaestudantil.exception.ProfessorNaoEncontradoException;
@@ -71,6 +72,16 @@ public final class NotFoundExceptionHandler {
     public static class VantagemHandler implements ExceptionHandler<VantagemNaoEncontradaException, HttpResponse<ErroResponse>> {
         @Override
         public HttpResponse<ErroResponse> handle(HttpRequest request, VantagemNaoEncontradaException ex) {
+            return notFound(request, ex.getMessage());
+        }
+    }
+
+    @Produces(MediaType.APPLICATION_JSON)
+    @Singleton
+    @Requires(classes = {CupomNaoEncontradoException.class, ExceptionHandler.class})
+    public static class CupomHandler implements ExceptionHandler<CupomNaoEncontradoException, HttpResponse<ErroResponse>> {
+        @Override
+        public HttpResponse<ErroResponse> handle(HttpRequest request, CupomNaoEncontradoException ex) {
             return notFound(request, ex.getMessage());
         }
     }

@@ -8,6 +8,12 @@ export interface TransacaoItem {
   descricao: string;
   alunoId: number | null;
   alunoNome: string | null;
+  codigoCupom?: string | null;
+  dataExpiracao?: string | null;
+  cupomUsadoEm?: string | null;
+  vantagemId?: number | null;
+  vantagemNome?: string | null;
+  empresaNomeFantasia?: string | null;
 }
 
 export interface ExtratoItem {

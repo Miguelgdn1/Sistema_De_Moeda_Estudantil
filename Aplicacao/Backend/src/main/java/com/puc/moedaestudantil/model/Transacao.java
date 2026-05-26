@@ -26,8 +26,14 @@ public class Transacao {
     @Column(columnDefinition = "TEXT")
     private String mensagem;
 
-    @Column(length = 50)
+    @Column(length = 50, name = "codigo_cupom", unique = true)
     private String codigoCupom;
+
+    @Column(name = "data_expiracao")
+    private LocalDateTime dataExpiracao;
+
+    @Column(name = "cupom_usado_em")
+    private LocalDateTime cupomUsadoEm;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "professor_id")
@@ -60,6 +66,12 @@ public class Transacao {
 
     public String getCodigoCupom() { return codigoCupom; }
     public void setCodigoCupom(String codigoCupom) { this.codigoCupom = codigoCupom; }
+
+    public LocalDateTime getDataExpiracao() { return dataExpiracao; }
+    public void setDataExpiracao(LocalDateTime dataExpiracao) { this.dataExpiracao = dataExpiracao; }
+
+    public LocalDateTime getCupomUsadoEm() { return cupomUsadoEm; }
+    public void setCupomUsadoEm(LocalDateTime cupomUsadoEm) { this.cupomUsadoEm = cupomUsadoEm; }
 
     public Professor getProfessor() { return professor; }
     public void setProfessor(Professor professor) { this.professor = professor; }

@@ -1,9 +1,12 @@
-export interface AlunoItem {
+import { EnderecoEstruturado } from './endereco.model';
+
+export interface AlunoItem extends EnderecoEstruturado {
   id: number;
   email: string;
   cpf: string;
   rg: string;
   nome: string;
+  telefone?: string;
   endereco?: string;
   curso: string;
   saldoMoedas: number;
@@ -11,20 +14,20 @@ export interface AlunoItem {
   instituicaoNome: string;
 }
 
-export interface AlunoPayload {
+export interface AlunoPayload extends EnderecoEstruturado {
   email: string;
   senha: string;
   cpf: string;
   rg: string;
   nome: string;
-  endereco?: string;
+  telefone?: string;
   curso: string;
   instituicaoId: number;
 }
 
-export interface AlunoProfileUpdatePayload {
+export interface AlunoProfileUpdatePayload extends EnderecoEstruturado {
   nome: string;
   email: string;
-  endereco?: string;
+  telefone?: string;
   senha?: string;
 }

@@ -15,7 +15,14 @@ public record AlunoRequest(
     @NotBlank @Pattern(regexp = "\\d{11}", message = "CPF deve conter exatamente 11 digitos numericos") String cpf,
     @NotBlank String rg,
     @NotBlank String nome,
-    @Nullable String endereco,
+    @Nullable @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "Telefone deve estar no formato E.164 (ex.: +5531999999999)") String telefone,
+    @Nullable @Pattern(regexp = "\\d{8}", message = "CEP deve conter 8 digitos") String cep,
+    @Nullable String logradouro,
+    @Nullable String numero,
+    @Nullable String complemento,
+    @Nullable String bairro,
+    @Nullable String cidade,
+    @Nullable @Size(min = 2, max = 2) String uf,
     @NotBlank String curso,
     @NotNull Long instituicaoId
 ) {}

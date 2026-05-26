@@ -1,0 +1,122 @@
+<app-shell>
+  <div class="container">
+    <app-page-header
+      title="Catalogo de vantagens"
+      [subtitle]="'Saldo atual: M$ ' + saldo()"
+      backTo="/alunos/painel"
+    ></app-page-header>
+
+    <app-card>
+      <div class="filtros">
+        <div class="filtro">
+          <label>Empresa</label>
+          <select [ngModel]="filtroEmpresa()" (ngModelChange)="filtroEmpresa.set($event)">
+            <option value="">Todas</option>
+            <option *ngFor="let e of empresas()" [value]="e">{{ e }}</option>
+          </select>
+        </div>
+        <div class="filtro">
+          <label>Custo maximo (moedas)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Sem limite"
+            [ngModel]="filtroCustoMax()"
+            (ngModelChange)="setFiltroCusto($event)"
+          >
+        </div>
+      </div>
+    </app-card>
+
+    <ng-container *ngIf="loading(); else conteudo">
+      <app-card>
+        <div class="loading">
+          <span class="material-icons spin">progress_activity</span>
+          <p>Carregando vantagens...</p>
+        </div>
+      </app-card>
+    </ng-container>
+
+    <ng-template #conteudo>
+      <app-card *ngIf="filtradas().length === 0" [padded]="false">
+        <app-empty-state
+          icon="redeem"
+          title="Nenhuma vantagem encontrada"
+          description="Tente ajustar os filtros ou volte mais tarde."
+        ></app-empty-state>
+      </app-card>
+
+      <div class="grid" *ngIf="filtradas().length > 0">
+        <article class="vantagem-card" *ngFor="let v of filtradas()">
+          <div class="foto">
+            <img *ngIf="v.fotoUrl; else placeholder" [src]="v.fotoUrl" [alt]="v.nome">
+            <ng-template #placeholder>
+              <div class="foto-placeholder"><span class="material-icons">redeem</span></div>
+            </ng-template>
+          </div>
+          <div class="conteudo">
+            <h3 class="titulo">{{ v.nome }}</h3>
+            <p class="empresa" *ngIf="v.empresaNomeFantasia">{{ v.empresaNomeFantasia }}</p>
+            <p class="descricao">{{ v.descricao || 'Sem descricao.' }}</p>
+            <div class="rodape">
+              <div class="custo">M$ {{ v.custoMoedas }}</div>
+              <app-button
+                variant="primary"
+                size="sm"
+                [disabled]="!podeResgatar(v)"
+                (click)="solicitar(v)"
+              >
+                Resgatar
+              </app-button>
+            </div>
+            <p *ngIf="!podeResgatar(v)" class="alerta">Saldo insuficiente.</p>
+          </div>
+        </article>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Modal de confirmacao -->
+  <div class="modal-backdrop" *ngIf="confirmando() as v" (click)="fecharModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Confirmar resgate</h3>
+      <p>Voce vai resgatar:</p>
+      <p class="vantagem-nome">{{ v.nome }}</p>
+      <ul class="resumo">
+        <li><span>Custo</span><strong>M$ {{ v.custoMoedas }}</strong></li>
+        <li><span>Saldo atual</span><strong>M$ {{ saldo() }}</strong></li>
+        <li><span>Saldo apos resgate</span><strong>M$ {{ saldo() - v.custoMoedas }}</strong></li>
+      </ul>
+      <div class="modal-acoes">
+        <app-button variant="secondary" (click)="fecharModal()" [disabled]="resgatando()">Cancelar</app-button>
+        <app-button variant="primary" (click)="confirmar()" [loading]="resgatando()">Confirmar resgate</app-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de sucesso -->
+  <div class="modal-backdrop" *ngIf="resgateSucesso() as r" (click)="fecharSucesso()">
+    <div class="modal modal-sucesso" (click)="$event.stopPropagation()">
+      <span class="material-icons sucesso-icon">check_circle</span>
+      <h3>Resgate confirmado!</h3>
+      <p>{{ r.vantagemNome }}<span *ngIf="r.empresaNome"> &middot; {{ r.empresaNome }}</span></p>
+
+      <div class="qr-wrap">
+        <img [src]="'data:image/png;base64,' + r.qrCodeBase64" alt="QR Code do cupom">
+      </div>
+
+      <div class="codigo">
+        <span class="codigo-label">CODIGO DO CUPOM</span>
+        <span class="codigo-value">{{ r.codigoCupom }}</span>
+      </div>
+
+      <p class="info">Saldo restante: <strong>M$ {{ r.saldoRestante }}</strong></p>
+      <p class="info expira">Valido ate {{ r.dataExpiracao | date:'dd/MM/yyyy HH:mm' }}</p>
+
+      <div class="modal-acoes">
+        <app-button variant="secondary" (click)="fecharSucesso()">Fechar</app-button>
+        <app-button variant="primary" (click)="verCupons()">Ver meus cupons</app-button>
+      </div>
+    </div>
+  </div>
+</app-shell>

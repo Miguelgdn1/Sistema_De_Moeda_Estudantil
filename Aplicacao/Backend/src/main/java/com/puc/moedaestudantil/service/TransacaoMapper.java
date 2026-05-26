@@ -2,6 +2,7 @@ package com.puc.moedaestudantil.service;
 
 import com.puc.moedaestudantil.dto.response.TransacaoResponse;
 import com.puc.moedaestudantil.model.Transacao;
+import com.puc.moedaestudantil.model.Vantagem;
 
 final class TransacaoMapper {
 
@@ -20,6 +21,13 @@ final class TransacaoMapper {
         }
         Long alunoId = t.getAluno() != null ? t.getAluno().getId() : null;
         String alunoNome = t.getAluno() != null ? t.getAluno().getNome() : null;
+
+        Vantagem vantagem = t.getVantagem();
+        Long vantagemId = vantagem != null ? vantagem.getId() : null;
+        String vantagemNome = vantagem != null ? vantagem.getNome() : null;
+        String empresaNome = vantagem != null && vantagem.getEmpresa() != null
+            ? vantagem.getEmpresa().getNomeFantasia() : null;
+
         return new TransacaoResponse(
             t.getId(),
             t.getTipo() != null ? t.getTipo().name() : null,
@@ -27,7 +35,13 @@ final class TransacaoMapper {
             t.getDataHora(),
             descricao,
             alunoId,
-            alunoNome
+            alunoNome,
+            t.getCodigoCupom(),
+            t.getDataExpiracao(),
+            t.getCupomUsadoEm(),
+            vantagemId,
+            vantagemNome,
+            empresaNome
         );
     }
 }

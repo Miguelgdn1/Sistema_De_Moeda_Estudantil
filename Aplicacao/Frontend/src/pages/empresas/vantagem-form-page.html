@@ -1,0 +1,57 @@
+<app-shell>
+  <div class="container-narrow">
+    <app-page-header
+      [title]="isEdit() ? 'Editar vantagem' : 'Nova vantagem'"
+      [subtitle]="isEdit() ? 'Atualize os dados da vantagem.' : 'Cadastre uma vantagem para os alunos resgatarem.'"
+      backTo="/empresas/vantagens"
+    ></app-page-header>
+
+    <app-card>
+      <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <app-form-field
+          label="Nome"
+          [required]="true"
+          [hasError]="invalid('nome')"
+          error="Nome obrigatorio"
+        >
+          <input type="text" formControlName="nome" placeholder="Ex.: 20% de desconto na livraria">
+        </app-form-field>
+
+        <app-form-field
+          label="Descricao"
+          hint="Detalhes que ajudem o aluno a entender a oferta"
+        >
+          <textarea formControlName="descricao" rows="4" placeholder="Ex.: valido para alunos de Engenharia, ate 31/12."></textarea>
+        </app-form-field>
+
+        <app-form-field
+          label="Custo em moedas"
+          [required]="true"
+          [hasError]="invalid('custoMoedas')"
+          error="Informe um valor maior que zero"
+        >
+          <input type="number" formControlName="custoMoedas" min="1" placeholder="100">
+        </app-form-field>
+
+        <app-form-field
+          label="URL da foto"
+          hint="Cole o link de uma imagem (PNG, JPG)"
+        >
+          <input type="url" formControlName="fotoUrl" placeholder="https://...">
+        </app-form-field>
+
+        <div class="preview" *ngIf="fotoPreview()">
+          <span class="preview-label">Preview</span>
+          <img [src]="fotoPreview()" alt="Preview da vantagem" onerror="this.style.display='none'">
+        </div>
+
+        <div class="actions">
+          <app-button variant="secondary" type="button" (click)="cancel()">Cancelar</app-button>
+          <app-button variant="primary" type="submit" [loading]="saving()" [disabled]="form.invalid">
+            {{ isEdit() ? 'Salvar alteracoes' : 'Cadastrar' }}
+          </app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</app-shell>

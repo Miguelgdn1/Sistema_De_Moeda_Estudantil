@@ -8,6 +8,7 @@ import com.puc.moedaestudantil.exception.AlunoNaoEncontradoException;
 import com.puc.moedaestudantil.exception.CpfDuplicadoException;
 import com.puc.moedaestudantil.exception.EmailDuplicadoException;
 import com.puc.moedaestudantil.exception.InstituicaoNaoEncontradaException;
+import com.puc.moedaestudantil.exception.SaldoInsuficienteException;
 import com.puc.moedaestudantil.model.Aluno;
 import com.puc.moedaestudantil.model.Instituicao;
 import com.puc.moedaestudantil.repository.AlunoRepository;
@@ -58,7 +59,9 @@ public class AlunoService {
         aluno.setCpf(request.cpf());
         aluno.setRg(request.rg());
         aluno.setNome(request.nome());
-        aluno.setEndereco(request.endereco());
+        aluno.setTelefone(request.telefone());
+        aplicarEndereco(aluno, request.cep(), request.logradouro(), request.numero(),
+            request.complemento(), request.bairro(), request.cidade(), request.uf());
         aluno.setCurso(request.curso());
         aluno.setSaldoMoedas(0);
         aluno.setInstituicao(instituicao);
@@ -97,7 +100,9 @@ public class AlunoService {
         aluno.setCpf(request.cpf());
         aluno.setRg(request.rg());
         aluno.setNome(request.nome());
-        aluno.setEndereco(request.endereco());
+        aluno.setTelefone(request.telefone());
+        aplicarEndereco(aluno, request.cep(), request.logradouro(), request.numero(),
+            request.complemento(), request.bairro(), request.cidade(), request.uf());
         aluno.setCurso(request.curso());
         aluno.setInstituicao(instituicao);
 
@@ -115,8 +120,9 @@ public class AlunoService {
 
         aluno.setNome(request.nome());
         aluno.setEmail(request.email());
-        aluno.setEndereco(request.endereco() != null && !request.endereco().isBlank()
-            ? request.endereco() : null);
+        aluno.setTelefone(request.telefone());
+        aplicarEndereco(aluno, request.cep(), request.logradouro(), request.numero(),
+            request.complemento(), request.bairro(), request.cidade(), request.uf());
 
         if (request.senha() != null && !request.senha().isBlank()) {
             aluno.setSenhaHash(passwordEncoder.hash(request.senha()));
@@ -132,6 +138,17 @@ public class AlunoService {
         alunoRepository.update(aluno);
     }
 
+    @Transactional
+    public AlunoResponse ajustarSaldo(Long id, int quantidade) {
+        Aluno aluno = carregarAluno(id);
+        int novoSaldo = aluno.getSaldoMoedas() + quantidade;
+        if (novoSaldo < 0) {
+            throw new SaldoInsuficienteException(aluno.getSaldoMoedas(), -quantidade);
+        }
+        aluno.setSaldoMoedas(novoSaldo);
+        return toResponse(alunoRepository.update(aluno));
+    }
+
     public List<TransacaoResponse> listarExtrato(Long alunoId) {
         carregarAluno(alunoId);
         return transacaoRepository.listarPorAluno(alunoId).stream()
@@ -144,6 +161,27 @@ public class AlunoService {
             .orElseThrow(() -> new AlunoNaoEncontradoException(id));
     }
 
+    // Mantemos o campo legado `endereco` (TEXT) preenchido por concatenação dos campos
+    // estruturados, para que telas que ainda leem `endereco` direto continuem funcionando.
+    private void aplicarEndereco(Aluno aluno, String cep, String logradouro, String numero,
+                                 String complemento, String bairro, String cidade, String uf) {
+        aluno.setCep(blankToNull(cep));
+        aluno.setLogradouro(blankToNull(logradouro));
+        aluno.setNumero(blankToNull(numero));
+        aluno.setComplemento(blankToNull(complemento));
+        aluno.setBairro(blankToNull(bairro));
+        aluno.setCidade(blankToNull(cidade));
+        aluno.setUf(blankToNull(uf));
+        aluno.setEndereco(EnderecoFormatter.format(
+            aluno.getLogradouro(), aluno.getNumero(), aluno.getComplemento(),
+            aluno.getBairro(), aluno.getCidade(), aluno.getUf(), aluno.getCep()
+        ));
+    }
+
+    private String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
+    }
+
     private AlunoResponse toResponse(Aluno a) {
         return new AlunoResponse(
             a.getId(),
@@ -151,7 +189,15 @@ public class AlunoService {
             a.getCpf(),
             a.getRg(),
             a.getNome(),
+            a.getTelefone(),
             a.getEndereco(),
+            a.getCep(),
+            a.getLogradouro(),
+            a.getNumero(),
+            a.getComplemento(),
+            a.getBairro(),
+            a.getCidade(),
+            a.getUf(),
             a.getCurso(),
             a.getSaldoMoedas(),
             a.getInstituicao() != null ? a.getInstituicao().getId() : null,

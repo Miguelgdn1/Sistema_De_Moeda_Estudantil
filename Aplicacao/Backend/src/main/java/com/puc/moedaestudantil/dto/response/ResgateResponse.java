@@ -1,21 +1,19 @@
 package com.puc.moedaestudantil.dto.response;
 
 import io.micronaut.serde.annotation.Serdeable;
+
 import java.time.LocalDateTime;
 
 @Serdeable
-public record TransacaoResponse(
-    Long id,
-    String tipo,
-    Integer valor,
-    LocalDateTime dataHora,
-    String descricao,
-    Long alunoId,
-    String alunoNome,
+public record ResgateResponse(
+    Long transacaoId,
     String codigoCupom,
+    String qrCodeBase64,
+    LocalDateTime dataResgate,
     LocalDateTime dataExpiracao,
-    LocalDateTime cupomUsadoEm,
+    Integer saldoRestante,
     Long vantagemId,
     String vantagemNome,
-    String empresaNomeFantasia
+    Integer custoMoedas,
+    String empresaNome
 ) {}

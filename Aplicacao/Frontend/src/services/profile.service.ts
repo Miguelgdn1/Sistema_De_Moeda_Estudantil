@@ -11,7 +11,15 @@ interface AlunoApiResponse {
   cpf: string;
   rg: string;
   nome: string;
+  telefone?: string;
   endereco?: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
   curso: string;
   saldoMoedas: number;
   instituicaoId: number;
@@ -26,6 +34,12 @@ interface TransacaoApiResponse {
   descricao: string;
   alunoId: number | null;
   alunoNome: string | null;
+  codigoCupom?: string | null;
+  dataExpiracao?: string | null;
+  cupomUsadoEm?: string | null;
+  vantagemId?: number | null;
+  vantagemNome?: string | null;
+  empresaNomeFantasia?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -58,7 +72,15 @@ export class ProfileService {
       cpf: a.cpf,
       rg: a.rg,
       nome: a.nome,
+      telefone: a.telefone,
       endereco: a.endereco,
+      cep: a.cep,
+      logradouro: a.logradouro,
+      numero: a.numero,
+      complemento: a.complemento,
+      bairro: a.bairro,
+      cidade: a.cidade,
+      uf: a.uf,
       curso: a.curso,
       saldoMoedas: a.saldoMoedas,
       instituicaoId: a.instituicaoId,
@@ -75,6 +97,12 @@ export class ProfileService {
       descricao: t.descricao,
       alunoId: t.alunoId,
       alunoNome: t.alunoNome,
+      codigoCupom: t.codigoCupom ?? null,
+      dataExpiracao: t.dataExpiracao ?? null,
+      cupomUsadoEm: t.cupomUsadoEm ?? null,
+      vantagemId: t.vantagemId ?? null,
+      vantagemNome: t.vantagemNome ?? null,
+      empresaNomeFantasia: t.empresaNomeFantasia ?? null,
     };
   }
 }

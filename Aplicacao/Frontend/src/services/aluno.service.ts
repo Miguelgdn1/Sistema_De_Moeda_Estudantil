@@ -10,7 +10,15 @@ interface AlunoApiResponse {
   cpf: string;
   rg: string;
   nome: string;
+  telefone?: string;
   endereco?: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
   curso: string;
   saldoMoedas: number;
   instituicaoId: number;
@@ -50,6 +58,12 @@ export class AlunoService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  ajustarSaldo(id: number, quantidade: number): Observable<AlunoItem> {
+    return this.http.post<AlunoApiResponse>(`${this.apiUrl}/${id}/saldo`, { quantidade }).pipe(
+      map((a) => this.toItem(a))
+    );
+  }
+
   private toItem(a: AlunoApiResponse): AlunoItem {
     return {
       id: a.id,
@@ -57,7 +71,15 @@ export class AlunoService {
       cpf: a.cpf,
       rg: a.rg,
       nome: a.nome,
+      telefone: a.telefone,
       endereco: a.endereco,
+      cep: a.cep,
+      logradouro: a.logradouro,
+      numero: a.numero,
+      complemento: a.complemento,
+      bairro: a.bairro,
+      cidade: a.cidade,
+      uf: a.uf,
       curso: a.curso,
       saldoMoedas: a.saldoMoedas,
       instituicaoId: a.instituicaoId,
