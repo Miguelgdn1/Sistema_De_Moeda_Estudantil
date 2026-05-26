@@ -1,5 +1,6 @@
 package com.puc.moedaestudantil.controller;
 
+import com.puc.moedaestudantil.dto.request.AjusteSaldoRequest;
 import com.puc.moedaestudantil.dto.request.AlunoRequest;
 import com.puc.moedaestudantil.dto.response.AlunoResponse;
 import com.puc.moedaestudantil.security.AuthenticatedUser;
@@ -70,5 +71,12 @@ public class AlunoController {
     public HttpResponse<Void> deletar(Long id) {
         alunoService.deletar(id);
         return HttpResponse.noContent();
+    }
+
+    @Operation(summary = "Ajusta saldo do aluno (admin) — quantidade pode ser positiva ou negativa")
+    @Post("/{id}/saldo")
+    @Secured(AuthenticatedUser.ROLE_ADMIN)
+    public AlunoResponse ajustarSaldo(Long id, @Body @Valid AjusteSaldoRequest request) {
+        return alunoService.ajustarSaldo(id, request.quantidade());
     }
 }

@@ -9,11 +9,12 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { CardComponent } from '../../shared/components/card.component';
 import { ButtonComponent } from '../../shared/components/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { SaldoDialogComponent } from '../../shared/components/saldo-dialog.component';
 
 @Component({
   standalone: true,
   selector: 'app-aluno-list-page',
-  imports: [CommonModule, RouterLink, AppShellComponent, PageHeaderComponent, CardComponent, ButtonComponent, EmptyStateComponent],
+  imports: [CommonModule, RouterLink, AppShellComponent, PageHeaderComponent, CardComponent, ButtonComponent, EmptyStateComponent, SaldoDialogComponent],
   templateUrl: './aluno-list-page.html',
   styleUrl: './aluno-list-page.css',
 })
@@ -24,6 +25,8 @@ export class AlunoListPage implements OnInit {
 
   protected alunos = signal<AlunoItem[]>([]);
   protected loading = signal(true);
+  protected ajusteAlvo = signal<AlunoItem | null>(null);
+  protected ajusteSaving = signal(false);
 
   ngOnInit(): void {
     this.carregar();
@@ -44,6 +47,29 @@ export class AlunoListPage implements OnInit {
     this.alunoService.deletar(a.id).subscribe({
       next: () => { this.snack.open('Aluno excluído.', 'Fechar', { duration: 3000, panelClass: ['snackbar-success'] }); this.carregar(); },
       error: (err) => this.snack.open(err?.error?.message ?? err?.error?.mensagem ?? 'Erro ao excluir.', 'Fechar', { duration: 4000, panelClass: ['snackbar-error'] }),
+    });
+  }
+
+  abrirAjuste(a: AlunoItem): void { this.ajusteAlvo.set(a); }
+  fecharAjuste(): void { if (!this.ajusteSaving()) this.ajusteAlvo.set(null); }
+
+  confirmarAjuste(quantidade: number): void {
+    const alvo = this.ajusteAlvo();
+    if (!alvo) return;
+    this.ajusteSaving.set(true);
+    this.alunoService.ajustarSaldo(alvo.id, quantidade).subscribe({
+      next: (atualizado) => {
+        this.ajusteSaving.set(false);
+        this.ajusteAlvo.set(null);
+        this.alunos.update((list) => list.map((a) => a.id === atualizado.id ? atualizado : a));
+        const verbo = quantidade > 0 ? 'adicionadas a' : 'removidas de';
+        this.snack.open(`M$ ${Math.abs(quantidade)} ${verbo} ${atualizado.nome}.`, 'Fechar', { panelClass: ['snackbar-success'] });
+      },
+      error: (err) => {
+        this.ajusteSaving.set(false);
+        const msg = err?.error?.message ?? err?.error?.mensagem ?? 'Erro ao ajustar saldo.';
+        this.snack.open(msg, 'Fechar', { panelClass: ['snackbar-error'] });
+      },
     });
   }
 }

@@ -45,6 +45,9 @@
                 <td>{{ a.instituicaoNome }}</td>
                 <td class="num accent">M$ {{ a.saldoMoedas }}</td>
                 <td class="end actions">
+                  <button class="icon-btn" (click)="abrirAjuste(a)" title="Ajustar saldo">
+                    <span class="material-icons">paid</span>
+                  </button>
                   <button class="icon-btn" (click)="editar(a.id)" title="Editar">
                     <span class="material-icons">edit</span>
                   </button>
@@ -59,4 +62,14 @@
       }
     </app-card>
   </div>
+
+  @if (ajusteAlvo(); as alvo) {
+    <app-saldo-dialog
+      [nome]="alvo.nome"
+      [saldoAtual]="alvo.saldoMoedas"
+      [loading]="ajusteSaving()"
+      (confirm)="confirmarAjuste($event)"
+      (cancel)="fecharAjuste()"
+    ></app-saldo-dialog>
+  }
 </app-shell>

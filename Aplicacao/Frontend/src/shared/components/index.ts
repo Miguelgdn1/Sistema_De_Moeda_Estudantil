@@ -6,3 +6,5 @@ export * from './form-field.component';
 export * from './page-header.component';
 export * from './transaction-item.component';
 export * from './transaction-list.component';
+export * from './cep-input.component';
+export * from './saldo-dialog.component';
