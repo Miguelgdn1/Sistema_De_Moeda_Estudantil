@@ -2,7 +2,7 @@
 
 Sistema que estimula o reconhecimento do mérito estudantil através de uma moeda virtual. Professores distribuem moedas a alunos como reconhecimento; empresas parceiras oferecem vantagens em troca dessas moedas.
 
-> Projeto da disciplina **Laboratório de Desenvolvimento de Software** — Engenharia de Software, PUC Minas. Prof. **João Paulo Carneiro Aramuni**. Lab03 — Release 1 (concluída) · Lab04 — Release 2 (em andamento).
+> Projeto da disciplina **Laboratório de Desenvolvimento de Software** — Engenharia de Software, PUC Minas. Prof. **João Paulo Carneiro Aramuni**. Release 1 (Lab03) · Release 2 (Lab04) · Release 3 (Lab05).
 
 ---
 
@@ -11,8 +11,15 @@ Sistema que estimula o reconhecimento do mérito estudantil através de uma moed
 - [Status atual](#status-atual)
 - [Tecnologias](#tecnologias)
 - [Arquitetura](#arquitetura)
-- [Pré-requisitos](#pré-requisitos)
-- [Subindo o projeto](#subindo-o-projeto)
+- [Guia de instalação para iniciantes (Windows · macOS · Linux)](#guia-de-instalação-para-iniciantes-windows--macos--linux)
+  - [1. Instalar os programas necessários](#1-instalar-os-programas-necessários)
+  - [2. Baixar o projeto](#2-baixar-o-projeto)
+  - [3. Configurar o arquivo `.env`](#3-configurar-o-arquivo-env)
+  - [4. Subir a infraestrutura (Docker)](#4-subir-a-infraestrutura-docker)
+  - [5. Rodar o backend](#5-rodar-o-backend)
+  - [6. Rodar o frontend](#6-rodar-o-frontend)
+  - [7. Abrir o sistema](#7-abrir-o-sistema)
+- [Integração com WhatsApp (API não oficial)](#integração-com-whatsapp-api-não-oficial)
 - [Credenciais e perfis de teste](#credenciais-e-perfis-de-teste)
 - [Roadmap de testes por perfil](#roadmap-de-testes-por-perfil)
 - [Como validar mensageria e e-mail](#como-validar-mensageria-e-e-mail)
@@ -27,34 +34,36 @@ Sistema que estimula o reconhecimento do mérito estudantil através de uma moed
 A plataforma centraliza a economia interna de mérito de uma instituição de ensino:
 
 - **Alunos** cadastram-se com seus dados, recebem moedas dos professores e consultam saldo/extrato. Trocam moedas por vantagens das empresas parceiras (geração de cupom + QR Code).
-- **Professores** são cadastrados pelo administrador. Recebem **1.000 moedas iniciais** para distribuir como reconhecimento, com uma mensagem aberta e obrigatória. Podem fazer login pelo formulário normal ou por um **seletor com o próprio nome**.
+- **Professores** são cadastrados pelo administrador. Recebem **1.000 moedas por semestre** para distribuir como reconhecimento, com uma mensagem aberta e obrigatória. Podem fazer login pelo formulário normal ou por um **seletor com o próprio nome**.
 - **Empresas parceiras** cadastram-se livremente, mantêm seu catálogo de vantagens e visualizam o histórico de resgates dos alunos.
 - **Administrador** gerencia todos os atores (alunos, professores, empresas) e **ajusta saldos** quando necessário.
 - Toda distribuição/resgate é registrada como **transação** consultável em extrato.
-- Notificações de envio de moedas e de cupons são entregues **assincronamente via RabbitMQ + SMTP** (e WhatsApp opcional).
+- Notificações de envio de moedas e de cupons são entregues **assincronamente via RabbitMQ**, por **e-mail (SMTP)** e por **WhatsApp (API não oficial, opcional)**.
 
 ---
 
 ## Status atual
 
-| User Story | Status |
+| User Story / Recurso | Status |
 |---|---|
 | US01 — Autenticação JWT por papel (Aluno, Professor, Empresa, Admin) | ✅ |
 | US01b — Login de professor por seletor (lista de nomes + senha) | ✅ |
 | US02 — Cadastro de Aluno (CRUD final) | ✅ |
 | US03 — Aluno consulta extrato e saldo | ✅ |
-| US04 — Resgate de vantagens pelo aluno (com geração de cupom + QR Code) | ✅ |
+| US04 — Resgate de vantagens pelo aluno (cupom + QR Code) | ✅ |
 | US05 — Professor distribui moedas (mensagem obrigatória, transação atômica) | ✅ |
 | US06 — Professor consulta extrato e saldo | ✅ |
 | US07 — CRUD de Vantagens pela empresa | ✅ |
-| US08 — Crédito automático de 1.000 moedas/semestre | 🛠 em andamento |
+| US08 — Crédito automático de 1.000 moedas/semestre (job agendado fev/ago) | ✅ |
 | US09 — Notificação por e-mail de envio de moedas e cupons | ✅ |
-| US10 — Notificação no WhatsApp do cupom de resgate | ✅ (Meta Cloud API opt-in) |
+| US10 — Notificação no WhatsApp do cupom de resgate (**API não oficial / Evolution API**) | ✅ (opt-in) |
 | CRUD admin de Empresa Parceira | ✅ |
-| **CRUD admin de Professor** (novo) | ✅ |
-| **Ajuste de saldo pelo admin** (alunos e professores, +/-) | ✅ |
+| CRUD admin de Professor | ✅ |
+| Ajuste de saldo pelo admin (alunos e professores, +/-) | ✅ |
 | Infra de mensageria (RabbitMQ + exchange tópica + filas + DLQ) | ✅ |
-| Toasts globais no canto superior direito (boas práticas Angular) | ✅ |
+| Toasts globais no canto superior direito (Angular Material) | ✅ |
+| **Lab05S01** — Deploy em nuvem (Render + Vercel) + Diagramas de Comunicação e Implantação | ⏸ pendente |
+| **Lab05S02** — Análise crítica de outro grupo + 3 PRs de refatoração | ⏸ pendente |
 
 ---
 
@@ -66,17 +75,18 @@ A plataforma centraliza a economia interna de mérito de uma instituição de en
 - Hibernate / Micronaut Data JPA (ORM) + Flyway (migrations)
 - Padrão DAO com `EntityManager`
 - Micronaut Security JWT (Bearer, 4h) + BCrypt (custo 12)
-- PostgreSQL 14+ (local via Docker ou Neon serverless)
+- PostgreSQL 16 (local via Docker ou Neon serverless)
 - RabbitMQ 3 (mensageria de notificações) via `micronaut-rabbitmq`
 - Jakarta Mail (SMTP) e Google ZXing 3.5.3 (geração de QR Code)
+- WhatsApp via **Evolution API** (gateway não oficial, self-hosted)
 - `dotenv-java` para carregar `.env` em desenvolvimento
-- Maven 3.9+
+- Maven 3.9+ (incluso via `mvnw`)
 
 **Frontend**
 - Angular 18 (standalone components, signals, lazy routes)
-- Angular Material (snackbar) configurado em **canto superior direito** via `MAT_SNACK_BAR_DEFAULT_OPTIONS`
+- Angular Material (snackbar) no **canto superior direito**
 - TypeScript 5
-- Design system próprio (tokens CSS, sem dependência de UI kit externo para os formulários)
+- Design system próprio (tokens CSS)
 - Node.js 20+ / npm
 
 ---
@@ -90,122 +100,254 @@ Controller (HTTP)  →  DTO  →  Service (regra)  →  Repository/DAO  →  Ent
                                 ↑                      ↓
                           JWT + RBAC          NotificationProducer
                                                        ↓
-                                  RabbitMQ (exchange tópica → email.queue / whatsapp.queue / DLQ)
+                          RabbitMQ (exchange tópica → email.queue / whatsapp.queue / DLQ)
                                                        ↓
-                                       Consumer → SmtpEmailService / WhatsAppService
+                       Consumer → SmtpEmailService / WhatsAppService (Evolution API)
 ```
 
 Detalhes:
 - **Login**: e-mail/senha (todos os papéis) OU seletor de professor (`GET /api/auth/professores` → `POST /api/auth/login-professor`).
-- **Notificações**: produtor publica numa exchange tópica `notifications.exchange`; consumer assina as filas `email.queue` e `whatsapp.queue`. Falhas vão para `notifications.dlq`.
+- **Notificações**: o produtor publica numa exchange tópica `notifications.exchange`; consumidores assinam as filas `email.queue` e `whatsapp.queue`. Falhas vão para `notifications.dlq` (Dead Letter Queue).
 
 ---
 
-## Pré-requisitos
+## Guia de instalação para iniciantes (Windows · macOS · Linux)
 
-- **Java 21** (JDK)
-- **Maven 3.9+** (o projeto já inclui `mvnw`)
-- **Node.js 20+** e **npm**
-- **Docker Desktop** (para subir PostgreSQL e RabbitMQ localmente)
-- _Opcional:_ conta no **[Neon](https://neon.tech)** caso queira hospedar o Postgres na nuvem em vez de localmente.
-- _Opcional (e-mail real):_ Conta Google com **App Password** (2FA ativo).
+Esta seção é para quem **nunca rodou o projeto**. Siga na ordem. Tudo que você precisa instalar está no passo 1.
 
----
+> **Resumo do que você vai instalar:** Git, Java (JDK 21), Node.js 20+ e Docker Desktop. Depois é só copiar um arquivo de configuração e rodar dois comandos.
 
-## Subindo o projeto
+### 1. Instalar os programas necessários
 
-O backend lê configuração de um arquivo **`.env`** localizado em `Aplicacao/Backend/.env`. O arquivo **não** é versionado; use `.env.example` como template.
+Você precisa de **4 programas**. Escolha o seu sistema operacional abaixo.
 
-### 1. Configurar variáveis de ambiente
+#### 🪟 Windows
 
+A forma mais fácil é usar o **winget** (já vem no Windows 10/11). Abra o **PowerShell** (tecla Windows → digite "PowerShell" → Enter) e rode:
+
+```powershell
+winget install --id Git.Git -e
+winget install --id EclipseAdoptium.Temurin.21.JDK -e
+winget install --id OpenJS.NodeJS.LTS -e
+winget install --id Docker.DockerDesktop -e
+```
+
+Depois **feche e reabra o PowerShell** (para o sistema reconhecer os novos programas) e **abra o Docker Desktop** uma vez (ele precisa estar rodando — ícone da baleia na barra de tarefas).
+
+> Sem winget? Baixe manualmente: [Git](https://git-scm.com/download/win) · [JDK 21 (Temurin)](https://adoptium.net/temurin/releases/?version=21) · [Node.js LTS](https://nodejs.org/) · [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+#### 🍎 macOS
+
+A forma mais fácil é usar o **Homebrew**. Se não tiver, instale-o em https://brew.sh e depois rode no **Terminal**:
+
+```bash
+brew install git
+brew install --cask temurin@21
+brew install node@20
+brew install --cask docker
+```
+
+Depois **abra o Docker Desktop** uma vez (ícone da baleia na barra de menus precisa estar ativo).
+
+> Em Macs com Apple Silicon (M1/M2/M3) todos os comandos acima funcionam normalmente.
+
+#### 🐧 Linux (Ubuntu/Debian)
+
+```bash
+# Git
+sudo apt update && sudo apt install -y git
+
+# JDK 21 (Temurin) — via apt do Adoptium
+sudo apt install -y wget apt-transport-https gpg
+wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg
+echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt update && sudo apt install -y temurin-21-jdk
+
+# Node.js 20 (via NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Docker Engine + Compose plugin
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER   # faça logout/login depois deste comando
+```
+
+> Em outras distros (Fedora, Arch, etc.), use o gerenciador de pacotes equivalente ou os instaladores oficiais linkados na seção Windows.
+
+#### ✅ Conferir se instalou tudo
+
+Abra um terminal novo e rode (vale para os 3 sistemas):
+
+```bash
+git --version       # ex: git version 2.45.0
+java -version       # ex: openjdk version "21.x.x"
+node --version      # ex: v20.x.x
+docker --version    # ex: Docker version 27.x.x
+```
+
+Se os 4 responderem com uma versão, está tudo certo. **O Docker Desktop precisa estar aberto/rodando** antes de continuar.
+
+### 2. Baixar o projeto
+
+```bash
+git clone https://github.com/henriquegdc/Sistema_De_Moeda_Estudantil.git
+cd Sistema_De_Moeda_Estudantil
+```
+
+> Se você já recebeu a pasta do projeto (zip), basta abrir um terminal dentro dela.
+
+### 3. Configurar o arquivo `.env`
+
+O backend lê suas configurações de um arquivo `.env` em `Aplicacao/Backend/.env`. Ele **não** vem pronto (por segurança); você o cria a partir do modelo `.env.example`.
+
+**Windows (PowerShell):**
 ```powershell
 cd Aplicacao\Backend
 Copy-Item .env.example .env
 ```
 
-Edite o `.env` com seus valores. Os blocos principais:
-
-| Bloco | Variáveis | Quando preencher |
-|---|---|---|
-| Banco de dados | `DB_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SKIP_BOOTSTRAP` | Sempre |
-| JWT | `JWT_SECRET` | Sempre (use um segredo aleatório ≥ 256 bits) |
-| CORS | `CORS_ALLOWED_ORIGIN` | Sempre (default: `http://localhost:4200`) |
-| RabbitMQ | `RABBITMQ_URI` | Sempre — usado para notificações assíncronas |
-| E-mail (SMTP) | `MAIL_ENABLED`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | Quando ligar notificações por e-mail |
-| WhatsApp | `WHATSAPP_ENABLED`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_TEMPLATE` | Quando ligar notificações no WhatsApp |
-
-#### Postgres — Opção A (local via Docker)
-
-```dotenv
-DB_URL=jdbc:postgresql://localhost:5432/moedaestudantil
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_SKIP_BOOTSTRAP=false
+**macOS / Linux (bash):**
+```bash
+cd Aplicacao/Backend
+cp .env.example .env
 ```
 
-Com `DB_SKIP_BOOTSTRAP=false`, o backend tenta criar o database `moedaestudantil` automaticamente no primeiro startup.
+Para apenas **rodar o sistema localmente**, os valores padrão do `.env` já funcionam (Postgres e RabbitMQ locais; e-mail e WhatsApp ficam em modo "simulado"). Você só precisa editar se quiser ligar e-mail real ou WhatsApp (veja as seções específicas).
 
-#### Postgres — Opção B (Neon gerenciado)
+> **E-mail real (opcional):** no `.env`, troque `MAIL_ENABLED=true`, use `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587` e gere uma **App Password** do Gmail em https://myaccount.google.com/apppasswords (precisa de 2FA ativo). Coloque-a em `MAIL_PASSWORD` e use seu e-mail em `MAIL_USERNAME` e `MAIL_FROM`. Com `MAIL_ENABLED=false`, o envio é só simulado nos logs — o fluxo de fila continua funcionando.
 
-```dotenv
-DB_URL="jdbc:postgresql://ep-xxxxx.sa-east-1.aws.neon.tech/neondb?sslmode=require"
-DB_USER=neondb_owner
-DB_PASSWORD=<senha-do-neon>
-DB_SKIP_BOOTSTRAP=true
+### 4. Subir a infraestrutura (Docker)
+
+Dentro de `Aplicacao/Backend`, com o Docker rodando:
+
+```bash
+docker compose up -d
 ```
 
-`DB_SKIP_BOOTSTRAP=true` é obrigatório no Neon — o banco já existe e a conta não tem permissão de `CREATE DATABASE`.
+Isso sobe o **PostgreSQL** (porta 5432) e o **RabbitMQ** (portas 5672 e 15672). Confira:
 
-#### E-mail real via Gmail (opcional, recomendado pra demonstração)
-
-1. Ative 2FA em https://myaccount.google.com/security
-2. Gere uma **App Password** em https://myaccount.google.com/apppasswords (16 caracteres).
-3. No `.env`:
-
-```dotenv
-MAIL_ENABLED=true
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=seu.email@gmail.com
-MAIL_PASSWORD=abcdefghijklmnop          # App Password sem espaços
-MAIL_FROM=seu.email@gmail.com           # tem que ser igual ao USERNAME
-MAIL_FROM_NAME=Sistema de Moeda Estudantil
-MAIL_STARTTLS=true
+```bash
+docker ps
 ```
 
-> Se `MAIL_ENABLED=false`, o sistema simula o envio (apenas loga "[mail.enabled=false]") — o fluxo de fila continua funcionando.
+Painel do RabbitMQ: http://localhost:15672 (login `guest` / senha `guest`).
 
-### 2. Subir a infraestrutura local (RabbitMQ + opcionalmente Postgres)
+> Usando **Neon** (Postgres na nuvem) em vez do local? Suba só o RabbitMQ: `docker compose up -d rabbitmq` e ajuste `DB_URL`, `DB_USER`, `DB_PASSWORD` e `DB_SKIP_BOOTSTRAP=true` no `.env`.
 
+### 5. Rodar o backend
+
+Ainda em `Aplicacao/Backend`:
+
+**Windows (PowerShell):**
 ```powershell
-cd Aplicacao\Backend
-docker compose up -d              # sobe Postgres + RabbitMQ
-# OU, se estiver usando Neon, apenas o RabbitMQ:
-docker compose up -d rabbitmq
+.\mvnw.bat mn:run
 ```
 
-Painel do RabbitMQ: `http://localhost:15672` (login `guest` / `guest`).
-
-### 3. Backend
-
-```powershell
-cd Aplicacao\Backend
-.\mvnw mn:run
+**macOS / Linux (bash):**
+```bash
+./mvnw mn:run
 ```
 
-Backend em `http://localhost:8080`. Endpoints REST sob `/api/*`. O Flyway roda as migrations automaticamente; o `DataSeeder` cria os perfis de teste no primeiro startup.
+Na primeira vez o Maven baixa as dependências (pode levar alguns minutos). Quando aparecer `Startup completed`, o backend está no ar em **http://localhost:8080**.
 
-Swagger UI: `http://localhost:8080/swagger-ui` (clique em **Authorize** e cole o JWT obtido em `/api/auth/login`).
+- O Flyway cria as tabelas automaticamente.
+- O `DataSeeder` cria os perfis de teste (ver [Credenciais](#credenciais-e-perfis-de-teste)).
+- Documentação interativa (Swagger): http://localhost:8080/swagger-ui
 
-### 4. Frontend
+> Deixe este terminal aberto — ele é o backend rodando.
 
-```powershell
-cd Aplicacao\Frontend
-npm install
+### 6. Rodar o frontend
+
+Abra **outro terminal** na raiz do projeto:
+
+**Windows / macOS / Linux:**
+```bash
+cd Aplicacao/Frontend
+npm install      # só na primeira vez (baixa as dependências)
 npm start
 ```
 
-Frontend em `http://localhost:4200`.
+O frontend sobe em **http://localhost:4200**.
+
+### 7. Abrir o sistema
+
+Acesse **http://localhost:4200** no navegador. Faça login com `admin@studentcoins.com` / `admin123` e explore. Para um roteiro guiado de ponta a ponta, veja [Roadmap de testes por perfil](#roadmap-de-testes-por-perfil).
+
+---
+
+## Integração com WhatsApp (API não oficial)
+
+A notificação de cupom por WhatsApp é **opcional** e usa a **[Evolution API](https://github.com/EvolutionAPI/evolution-api)** — um gateway **não oficial**, self-hosted, que conversa com o WhatsApp Web pareando um número real por **QR Code**. Diferente da API oficial da Meta, **não exige** conta Meta Business, número verificado nem aprovação de templates.
+
+> ⚠️ **Aviso:** APIs não oficiais usam automação sobre o WhatsApp Web e violam os Termos de Uso do WhatsApp; há risco de bloqueio do número. Use **apenas** um número de teste/descartável e **nunca** seu número pessoal. Este recurso é didático.
+
+### Como funciona no projeto
+
+```
+ResgateService → RabbitMQ (whatsapp.queue) → WhatsAppNotificationConsumer → WhatsAppService → Evolution API → WhatsApp do aluno
+```
+
+Quando um aluno resgata uma vantagem e tem **telefone cadastrado**, o sistema publica uma mensagem na fila `whatsapp.queue`. O `WhatsAppService` faz um `POST` HTTP para a Evolution API enviando o **QR Code do cupom como imagem** com uma legenda contendo o código e a validade. Com `WHATSAPP_ENABLED=false` (padrão), o envio é apenas simulado nos logs.
+
+### Passo a passo para habilitar
+
+**1. Suba a Evolution API** (e o Postgres/Redis dela) usando o profile `whatsapp` do docker-compose, em `Aplicacao/Backend`:
+
+```bash
+docker compose --profile whatsapp up -d
+```
+
+Isso sobe a Evolution API em **http://localhost:8081**. (Os serviços padrão Postgres/RabbitMQ continuam separados; este profile só adiciona os containers do WhatsApp.)
+
+**2. Defina a chave de API.** No `.env`, mantenha `WHATSAPP_API_KEY` e `EVOLUTION_API_KEY` com **o mesmo valor** (troque o padrão por uma chave sua). Recrie o container da Evolution se mudar a chave:
+
+```bash
+docker compose --profile whatsapp up -d --force-recreate evolution-api
+```
+
+**3. Crie uma instância e pareie seu número.** A Evolution expõe um painel/manager. Crie a instância chamada `moedaestudantil` (mesmo valor de `WHATSAPP_INSTANCE`) e gere o QR Code:
+
+```bash
+# Criar a instância (use a sua chave no header apikey)
+curl -X POST http://localhost:8081/instance/create \
+  -H "apikey: SUA_CHAVE_EVOLUTION" \
+  -H "Content-Type: application/json" \
+  -d '{"instanceName":"moedaestudantil","integration":"WHATSAPP-BAILEYS","qrcode":true}'
+```
+
+A resposta traz um QR Code (campo `qrcode`/`base64`). Você também pode abrir o **Manager** em http://localhost:8081/manager (informe a API key) e clicar para exibir o QR Code da instância. **Abra o WhatsApp no celular → Aparelhos conectados → Conectar um aparelho → escaneie o QR.**
+
+**4. Ligue o WhatsApp no backend.** No `.env`:
+
+```dotenv
+WHATSAPP_ENABLED=true
+WHATSAPP_BASE_URL=http://localhost:8081
+WHATSAPP_INSTANCE=moedaestudantil
+WHATSAPP_API_KEY=SUA_CHAVE_EVOLUTION
+WHATSAPP_COUNTRY_CODE=55
+WHATSAPP_SEND_QR=true
+```
+
+Reinicie o backend (`mvnw mn:run`).
+
+**5. Teste.** Cadastre um aluno com um **telefone real** (com DDD, ex: `(31) 99999-9999`) e faça um resgate de vantagem. O cupom (QR Code + código) chega no WhatsApp do número cadastrado. Acompanhe os logs do backend:
+
+```
+WhatsAppNotificationConsumer - Consumindo mensagem WhatsApp: tipo=cupom-aluno-wa para=...
+WhatsAppService              - WhatsApp (media) enviado para 5531999999999 via Evolution API (HTTP 201)
+```
+
+### Variáveis de ambiente do WhatsApp
+
+| Variável | Default | Descrição |
+|---|---|---|
+| `WHATSAPP_ENABLED` | `false` | Liga/desliga o envio real. `false` = simula nos logs. |
+| `WHATSAPP_BASE_URL` | `http://localhost:8081` | URL da Evolution API. |
+| `WHATSAPP_INSTANCE` | `moedaestudantil` | Nome da instância pareada na Evolution. |
+| `WHATSAPP_API_KEY` | _(vazio)_ | Chave de API da Evolution (header `apikey`). |
+| `WHATSAPP_COUNTRY_CODE` | `55` | Código do país, prefixado a números sem DDI. |
+| `WHATSAPP_SEND_QR` | `true` | Envia o QR do cupom como imagem (`true`) ou só texto (`false`). |
+| `EVOLUTION_API_KEY` | _(docker-compose)_ | Chave que a **própria** Evolution exige. Mantenha igual à `WHATSAPP_API_KEY`. |
 
 ---
 
@@ -216,19 +358,19 @@ O `DataSeeder` cria, no primeiro startup, os seguintes registros:
 | Papel | E-mail | Senha | Observações |
 |---|---|---|---|
 | **Administrador** | `admin@studentcoins.com` | `admin123` | Acesso ao painel admin (alunos, professores, empresas, ajuste de saldo). |
-| **Professor** | `joao.aramuni@puc.br` | `senha123` | CPF `11122233344`, vinculado à PUC Minas (Eng. de Software), saldo inicial **1.000 moedas**. Pode logar pelo seletor também. |
-| **Aluno** | _(criar via /alunos/novo)_ | _(definida no cadastro)_ | Saldo inicial **0** — receberá moedas quando o professor distribuir ou pelo ajuste admin. |
+| **Professor** | `joao.aramuni@puc.br` | `senha123` | CPF `11122233344`, vinculado à PUC Minas (Eng. de Software), saldo inicial **1.000 moedas**. Pode logar pelo seletor. |
+| **Aluno** | _(criar via /alunos/novo)_ | _(definida no cadastro)_ | Saldo inicial **0** — recebe moedas via distribuição ou ajuste admin. |
 | **Empresa Parceira** | _(criar via /empresas/novo)_ | _(definida no cadastro)_ | Cadastro aberto. |
 
 **Instituições pré-cadastradas pelo seed:** PUC Minas, UFMG, CEFET-MG.
 
-> Para usar e-mails reais, recadastre o professor seed via tela admin (Professores → Editar → trocar e-mail) ou edite `DataSeeder.java`.
+> Para usar e-mails/WhatsApp reais, recadastre o professor seed via tela admin (Professores → Editar) ou edite `DataSeeder.java`.
 
 ---
 
 ## Roadmap de testes por perfil
 
-Este roteiro percorre **todos os fluxos do sistema do zero**, simulando cada perfil de usuário. Executado em ordem, demonstra ponta a ponta: cadastro → distribuição → resgate → notificação por e-mail → ajuste administrativo.
+Este roteiro percorre **todos os fluxos do sistema do zero**, simulando cada perfil. Executado em ordem, demonstra ponta a ponta: cadastro → distribuição → resgate → notificação → ajuste administrativo.
 
 > **Antes de começar:** certifique-se de que backend (`:8080`), frontend (`:4200`), RabbitMQ e Postgres estão no ar. Use 4 navegadores (ou janelas anônimas) para alternar entre perfis sem deslogar.
 
@@ -253,15 +395,13 @@ Demonstra: **autenticação JWT, CRUD admin de aluno/professor/empresa, ajuste d
 
 **Pela UI** (`http://localhost:4200`):
 1. Login: `admin@studentcoins.com` / `admin123`.
-2. Menu **Professores** → "Novo professor" → preencha seu nome e seu **e-mail real** (ex: `seu.email+prof@gmail.com`) → senha `prof123` → salvar.
-3. Menu **Alunos** → vai precisar de um aluno cadastrado. Crie pelo fluxo público (Etapa 3) ou volte aqui depois.
-4. Menu **Empresas** → também criada pelo fluxo público (Etapa 2).
-5. Após existirem alunos e professores: clique no ícone **moeda** (paid) de qualquer linha → modal abre → digite `+500` ou `-100` → confirmar → toast aparece no canto superior direito.
+2. Menu **Professores** → "Novo professor" → preencha nome e **e-mail real** (ex: `seu.email+prof@gmail.com`) → senha `prof123` → salvar.
+3. Menu **Alunos** e **Empresas** → criados pelo fluxo público (Etapas 2 e 3) ou aqui.
+4. Após existirem alunos/professores: clique no ícone **moeda** de uma linha → modal → digite `+500` ou `-100` → confirmar → toast no canto superior direito.
 
-**Pela API** — pegando token primeiro:
+**Pela API** — pegando o token primeiro:
 
 ```powershell
-# Login admin (PowerShell, captura o token na variável $token)
 $resp = curl -s -X POST http://localhost:8080/api/auth/login `
   -H "Content-Type: application/json" `
   -d '{\"email\":\"admin@studentcoins.com\",\"senha\":\"admin123\"}'
@@ -270,199 +410,113 @@ $token   # confira que aparece um JWT
 ```
 
 ```powershell
-# Cadastrar um professor com SEU e-mail real
+# Cadastrar professor com SEU e-mail real
 curl -X POST http://localhost:8080/api/professores `
   -H "Authorization: Bearer $token" `
   -H "Content-Type: application/json" `
   -d '{\"nome\":\"Professor Teste\",\"email\":\"seu.email+prof@gmail.com\",\"senha\":\"prof123\",\"cpf\":\"99988877766\",\"departamento\":\"Computação\",\"instituicaoId\":1}'
-```
 
-```powershell
 # Ajustar saldo do aluno id=2: +500 moedas
 curl -X POST http://localhost:8080/api/alunos/2/saldo `
   -H "Authorization: Bearer $token" `
   -H "Content-Type: application/json" `
   -d '{\"quantidade\":500}'
-
-# Tirar 200 moedas do professor id=1
-curl -X POST http://localhost:8080/api/professores/1/saldo `
-  -H "Authorization: Bearer $token" `
-  -H "Content-Type: application/json" `
-  -d '{\"quantidade\":-200}'
 ```
 
-✅ **O que validar:**
-- UI: badge "M$" da linha muda imediatamente após o ajuste; toast verde no canto superior direito.
-- API: retorna 200 com o objeto atualizado. Se tentar tirar mais do que o saldo, recebe 409 com `SaldoInsuficienteException`.
+✅ **O que validar:** UI atualiza o badge "M$" na hora; toast verde. API retorna 200. Tirar mais que o saldo → 409 `SaldoInsuficienteException`.
 
 ### Etapa 2 — Empresa Parceira cadastra-se e cria vantagens
 
-Demonstra: **cadastro público, login, CRUD de vantagens**.
-
 **Pela UI:**
-1. Em `/login`, clique em "Criar agora" → "Sou Empresa Parceira".
-2. Preencha CNPJ, nome fantasia, e-mail (use outro alias seu, ex: `seu.email+empresa@gmail.com`), senha `empresa123`.
-3. Após cadastro, faça login com o e-mail/senha cadastrados.
-4. Menu **Vantagens** → "Nova vantagem" → preencha nome, descrição, preço (ex: 200 moedas), foto opcional → salvar.
-5. Crie 2-3 vantagens diferentes (cinema, livro, brinde).
+1. Em `/login`, "Criar agora" → "Sou Empresa Parceira". Preencha CNPJ, nome fantasia, e-mail (ex: `seu.email+empresa@gmail.com`), senha `empresa123`.
+2. Login → Menu **Vantagens** → "Nova vantagem" → nome, descrição, preço (ex: 200 moedas), foto opcional → salvar. Crie 2-3.
 
 **Pela API:**
-
 ```powershell
-# Cadastrar empresa (sem token — endpoint público)
 curl -X POST http://localhost:8080/api/empresas `
   -H "Content-Type: application/json" `
   -d '{\"nomeFantasia\":\"Loja Teste\",\"cnpj\":\"12345678000999\",\"email\":\"seu.email+empresa@gmail.com\",\"senha\":\"empresa123\",\"telefone\":\"+5531999999999\"}'
 
-# Login empresa
 $resp = curl -s -X POST http://localhost:8080/api/auth/login `
   -H "Content-Type: application/json" `
   -d '{\"email\":\"seu.email+empresa@gmail.com\",\"senha\":\"empresa123\"}'
 $tokenEmpresa = ($resp | ConvertFrom-Json).token
 
-# Criar vantagem (vou supor que a empresa criada tem id=1; ajuste se necessário)
 curl -X POST http://localhost:8080/api/vantagens `
   -H "Authorization: Bearer $tokenEmpresa" `
   -H "Content-Type: application/json" `
   -d '{\"nome\":\"Cinema CineSystem\",\"descricao\":\"1 ingresso comum\",\"precoMoedas\":200,\"empresaId\":1}'
 ```
 
-✅ **O que validar:**
-- Aluno verá essa vantagem no catálogo em `/alunos/vantagens`.
-
-### Etapa 3 — Aluno cadastra-se e ganha o primeiro saldo
-
-Demonstra: **cadastro de aluno, recebimento de moedas via professor, extrato**.
+### Etapa 3 — Aluno cadastra-se
 
 **Pela UI:**
 1. Em `/login`, "Criar agora" → "Sou Aluno".
-2. Preencha tudo (use CEP real, ele preenche o endereço automaticamente). E-mail: `seu.email+aluno@gmail.com`. Senha `aluno123`.
-3. Login com essas credenciais → cai no painel `/alunos/painel`. Saldo inicial: 0.
+2. Preencha tudo (use **CEP real** — preenche o endereço automaticamente) e um **telefone real** (para testar WhatsApp). E-mail: `seu.email+aluno@gmail.com`. Senha `aluno123`.
+3. Login → painel `/alunos/painel`. Saldo inicial: 0.
 
 ### Etapa 4 — Professor distribui moedas (gatilho de notificação)
 
-Demonstra: **login por seletor, transação atômica, mensageria, e-mail**.
-
-**Pela UI — login pelo seletor (novo):**
-1. Em `/login`, clique em "**Sou professor — entrar pelo seletor**".
-2. Lista carrega via `GET /api/auth/professores` (público, retorna só id+nome).
-3. Selecione "Professor Teste" (o que você criou na Etapa 1), digite a senha (`prof123`) → entrar.
-
-**Distribuir moedas:**
-1. Menu **Distribuir**.
-2. Selecione o aluno cadastrado, quantidade `87`, mensagem `Excelente participação na aula de hoje`.
-3. Enviar.
+**Pela UI — login pelo seletor:**
+1. Em `/login`, "**Sou professor — entrar pelo seletor**". Selecione "Professor Teste", senha `prof123`.
+2. Menu **Distribuir** → selecione o aluno, quantidade `87`, mensagem obrigatória → enviar.
 
 **Pela API:**
-
 ```powershell
-# Login professor pelo seletor (professorId=2 — ajuste se necessário)
 $resp = curl -s -X POST http://localhost:8080/api/auth/login-professor `
   -H "Content-Type: application/json" `
   -d '{\"professorId\":2,\"senha\":\"prof123\"}'
 $tokenProf = ($resp | ConvertFrom-Json).token
 
-# Distribuir 87 moedas pro aluno id=2
 curl -X POST http://localhost:8080/api/professores/2/distribuir `
   -H "Authorization: Bearer $tokenProf" `
   -H "Content-Type: application/json" `
   -d '{\"alunoId\":2,\"quantidade\":87,\"mensagem\":\"Excelente participação em aula.\"}'
 ```
 
-✅ **O que validar:**
-- **Saldos atualizados atomicamente**: o saldo do professor cai 87; o do aluno sobe 87.
-- **Logs do backend** (no terminal do `mvnw`):
-  ```
-  EmailNotificationConsumer - Consumindo mensagem de e-mail: ... para=seu.email+aluno@gmail.com
-  SmtpEmailService          - E-mail enviado para seu.email+aluno@gmail.com (assunto='Voce recebeu 87 moedas!')
-  EmailNotificationConsumer - Consumindo mensagem de e-mail: ... para=seu.email+prof@gmail.com
-  SmtpEmailService          - E-mail enviado para seu.email+prof@gmail.com (assunto='Confirmacao: 87 moedas enviadas')
-  ```
-- **Caixa de entrada** do `+aluno` recebe "Você recebeu 87 moedas!" e a do `+prof` recebe a confirmação.
-- **Extrato** do professor (`/professor/extrato`) e do aluno (`/alunos/extrato`) mostram a transação.
+✅ **O que validar:** saldos atualizados atomicamente (prof -87, aluno +87); logs mostram `E-mail enviado para...`; caixas de entrada recebem; extratos mostram a transação.
 
-### Etapa 5 — Aluno resgata uma vantagem (cupom + QR Code + e-mail anexo)
+### Etapa 5 — Aluno resgata vantagem (cupom + QR Code + e-mail + WhatsApp)
 
-Demonstra: **resgate, geração de QR Code (ZXing), notificação ao aluno e à empresa, opcional WhatsApp**.
-
-**Pela UI:**
-1. Login como o aluno.
-2. Menu **Vantagens** → escolha a vantagem cadastrada na Etapa 2 → "Resgatar".
-3. Confirmar → toast de sucesso.
-4. Menu **Meus cupons** → cupom aparece com código + QR Code embutido.
+**Pela UI:** Login aluno → Menu **Vantagens** → "Resgatar" → confirmar → Menu **Meus cupons** mostra o cupom com QR Code.
 
 **Pela API:**
-
 ```powershell
-# Login aluno
 $resp = curl -s -X POST http://localhost:8080/api/auth/login `
   -H "Content-Type: application/json" `
   -d '{\"email\":\"seu.email+aluno@gmail.com\",\"senha\":\"aluno123\"}'
 $tokenAluno = ($resp | ConvertFrom-Json).token
 
-# Resgatar vantagem id=1
 curl -X POST http://localhost:8080/api/resgates `
   -H "Authorization: Bearer $tokenAluno" `
   -H "Content-Type: application/json" `
   -d '{\"vantagemId\":1}'
 ```
 
-A resposta retorna o cupom: `{ "codigoCupom": "ABC123", "qrCodeBase64": "iVBORw0...", ... }`.
+✅ **O que validar:** saldo cai; e-mail do aluno chega com QR **inline**; e-mail da empresa chega; **se WhatsApp habilitado e o aluno tem telefone**, o cupom chega no WhatsApp.
 
-✅ **O que validar:**
-- **Saldo do aluno**: caiu o preço da vantagem.
-- **E-mail do aluno** chega com o QR Code **inline** (embutido na imagem, não link).
-- **E-mail da empresa** chega notificando "Cupom resgatado: <vantagem>".
-- **Filas no Rabbit** durante o resgate:
-  ```powershell
-  docker exec moedaestudantil-rabbitmq rabbitmqctl list_queues name messages
-  ```
-  Mostra `email.queue` com `messages > 0` por uma fração de segundo antes do consumer processar.
+### Etapa 6 — Empresa valida o cupom
 
-### Etapa 6 — Empresa valida o cupom apresentado pelo aluno
+**Pela UI:** Login empresa → Menu **Trocas** (relatório) → lista cupons com status.
+**Pela API:** `curl -H "Authorization: Bearer $tokenEmpresa" http://localhost:8080/api/empresas/1/cupons`
 
-Demonstra: **fluxo de validação no comércio físico**.
+### Etapa 7 — Admin ajusta saldo
 
-**Pela UI:**
-1. Login empresa.
-2. Menu **Trocas** (relatório) → lista os cupons resgatados, status (válido/usado/expirado).
-
-**Pela API:**
-
-```powershell
-# Listar cupons da empresa (id=1 — autenticada)
-curl -H "Authorization: Bearer $tokenEmpresa" http://localhost:8080/api/empresas/1/cupons
-```
-
-### Etapa 7 — Admin ajusta saldo (reset / brinde)
-
-Demonstra: **operação administrativa direta de saldo**.
-
-**Pela UI:**
-1. Login admin.
-2. Menu **Alunos** → ícone moeda na linha do aluno → +1000 → confirmar.
-3. Volte no aluno (login) → saldo atualizado.
-
-✅ **O que validar:** valida a regra que **impede saldo negativo**. Tente tirar mais do que o aluno tem → toast vermelho no canto superior direito com mensagem do back: "Saldo insuficiente".
+Login admin → Menu **Alunos** → ícone moeda → +1000 → confirmar. Valida a regra que **impede saldo negativo** (tente tirar mais que o saldo → toast vermelho "Saldo insuficiente").
 
 ---
 
 ## Como validar mensageria e e-mail
 
-### Confirmar que a fila está funcionando (sem o painel)
+### Conferir filas (sem o painel)
 
 ```powershell
-# Quantas mensagens em cada fila + quantos consumers
 docker exec moedaestudantil-rabbitmq rabbitmqctl list_queues name messages messages_ready consumers
-
-# Topologia declarada pelo MessagingConfig do backend
 docker exec moedaestudantil-rabbitmq rabbitmqctl list_exchanges
 docker exec moedaestudantil-rabbitmq rabbitmqctl list_bindings
 ```
 
-### Publicar uma mensagem direto pelo CLI (sem usar o backend produtor)
-
-Prova ponta a ponta da topologia:
+### Publicar uma mensagem direto pelo CLI (prova da topologia)
 
 ```powershell
 docker exec moedaestudantil-rabbitmq rabbitmqadmin publish `
@@ -472,25 +526,19 @@ docker exec moedaestudantil-rabbitmq rabbitmqadmin publish `
   properties='{\"content_type\":\"application/json\"}'
 ```
 
-O consumidor processa e o e-mail chega. Os logs do backend mostrarão `Consumindo mensagem...` e `E-mail enviado para...`.
-
 ### Forçar falha pra demonstrar a DLQ
 
-1. Edite `.env`, troque `MAIL_PASSWORD` por algo inválido. Restart no backend.
-2. Distribua moedas pela UI → SMTP falha → mensagem é nack-ada → cai na `notifications.dlq`.
-3. Verifique:
-   ```powershell
-   docker exec moedaestudantil-rabbitmq rabbitmqctl list_queues name messages
-   ```
-   `notifications.dlq` agora tem `messages > 0`. Sua topologia tem resiliência ✅.
+1. Edite `.env`, troque `MAIL_PASSWORD` por algo inválido. Reinicie o backend.
+2. Distribua moedas → SMTP falha → mensagem é rejeitada → cai na `notifications.dlq`.
+3. `docker exec moedaestudantil-rabbitmq rabbitmqctl list_queues name messages` → `notifications.dlq` com `messages > 0`. Resiliência ✅.
 
 ---
 
 ## Documentação adicional
 
-- **[Descrição do problema (PDF)](Descrição%20Problema%20Lab%2003%20Release1.pdf)** — Especificação original da Release 1.
+- **[Descrição do problema (PDFs)](.)** — Especificações das Releases 1, 2 e 3 na raiz do repositório.
 - **[Histórias de Usuário (PDF)](docs/Histórias-de-Usuário.pdf)** — US01 a US10.
-- Diagramas UML em `docs/` (Caso de Uso, Classes, Componentes, ER).
+- Diagramas UML em `docs/diagramas/` e fontes PlantUML em `docs/códigos/` (Caso de Uso, Classes, Componentes, ER, Sequência).
 - Coleção Insomnia em `docs/insomnia-collection.json` (chamadas prontas).
 
 ---
@@ -502,10 +550,10 @@ O consumidor processa e o e-mail chega. Os logs do backend mostrarão `Consumind
 | **Lab03S01** | Diagrama de Casos de Uso, Histórias de Usuário, Diagrama de Classes, Diagrama de Componentes | ✅ |
 | **Lab03S02** | Modelo ER, estratégia ORM + DAO, CRUDs iniciais de Aluno e Empresa Parceira | ✅ |
 | **Lab03S03** | CRUDs versão final + camada de persistência + arquitetura + feature de Professor | ✅ |
-| **Lab04S01** | Infra base (RabbitMQ + Mail + ZXing), notificação de envio de moedas, job semestral | ✅ (job 🛠) |
+| **Lab04S01** | Infra base (RabbitMQ + Mail + ZXing), notificação de envio de moedas, job semestral | ✅ |
 | **Lab04S02** | CRUD de Vantagem + listagem para aluno + diagramas de sequência | ✅ |
-| **Lab04S03** | Resgate + geração de QR Code + WhatsApp Cloud API + diagrama geral | ✅ |
-| **Lab05S01** | Deploy cloud (Render + Vercel + Neon + CloudAMQP) + diagramas de Comunicação e Implantação | ⏸ pendente |
+| **Lab04S03** | Resgate + geração de QR Code + WhatsApp + diagrama geral | ✅ |
+| **Lab05S01** | Deploy cloud (Render + Vercel) + diagramas de Comunicação e Implantação | ⏸ pendente |
 | **Lab05S02** | Análise crítica de outro grupo + 3 PRs de refatoração | ⏸ pendente |
 
 ---

@@ -35,6 +35,61 @@ services:
       timeout: 10s
       retries: 5
 
+  # --- WhatsApp (API NAO OFICIAL via Evolution API) ----------------------------
+  # Servicos opcionais. Sobem APENAS com o profile "whatsapp":
+  #   docker compose --profile whatsapp up -d
+  # Apos subir, pareie um numero abrindo o QR Code (ver instrucoes no README).
+  evolution-api:
+    image: atendai/evolution-api:v2.1.1
+    container_name: moedaestudantil-evolution
+    restart: unless-stopped
+    profiles: ["whatsapp"]
+    ports:
+      - "8081:8080"
+    environment:
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-troque-esta-chave-evolution}
+      # Versao do WhatsApp Web usada pelo Baileys. A versao fixada na imagem fica
+      # desatualizada e o WhatsApp fecha a conexao antes de emitir o QR (loop de
+      # reconexao). Forcar uma versao recente resolve. Atualize se voltar a falhar.
+      CONFIG_SESSION_PHONE_VERSION: ${EVOLUTION_WA_VERSION:-2.3000.1041103517}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://postgres:postgres@evolution-postgres:5432/evolution?schema=public
+      DATABASE_CONNECTION_CLIENT_NAME: evolution
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://evolution-redis:6379/6
+      CACHE_REDIS_PREFIX_KEY: evolution
+      CACHE_REDIS_SAVE_INSTANCES: "true"
+      CACHE_LOCAL_ENABLED: "false"
+    depends_on:
+      - evolution-postgres
+      - evolution-redis
+    volumes:
+      - evolution_instances:/evolution/instances
+
+  evolution-postgres:
+    image: postgres:16
+    container_name: moedaestudantil-evolution-postgres
+    restart: unless-stopped
+    profiles: ["whatsapp"]
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+
+  evolution-redis:
+    image: redis:7
+    container_name: moedaestudantil-evolution-redis
+    restart: unless-stopped
+    profiles: ["whatsapp"]
+    volumes:
+      - evolution_redis_data:/data
+
 volumes:
   postgres_data:
   rabbitmq_data:
+  evolution_instances:
+  evolution_postgres_data:
+  evolution_redis_data:

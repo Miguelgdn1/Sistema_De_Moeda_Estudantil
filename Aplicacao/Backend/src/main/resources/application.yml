@@ -101,10 +101,11 @@ mail:
   from-name: ${MAIL_FROM_NAME:Sistema de Moeda Estudantil}
   starttls: ${MAIL_STARTTLS:true}
 
+# WhatsApp via API NAO OFICIAL (Evolution API - gateway self-hosted pareado por QR Code).
 whatsapp:
   enabled: ${WHATSAPP_ENABLED:false}
-  base-url: ${WHATSAPP_BASE_URL:`https://graph.facebook.com/v22.0`}
-  phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
-  access-token: ${WHATSAPP_ACCESS_TOKEN:}
-  template-name: ${WHATSAPP_TEMPLATE:coupon_redemption}
-  template-language: ${WHATSAPP_TEMPLATE_LANG:pt_BR}
+  base-url: ${WHATSAPP_BASE_URL:`http://localhost:8081`}
+  instance: ${WHATSAPP_INSTANCE:moedaestudantil}
+  api-key: ${WHATSAPP_API_KEY:}
+  country-code: ${WHATSAPP_COUNTRY_CODE:55}
+  send-qr-image: ${WHATSAPP_SEND_QR:true}

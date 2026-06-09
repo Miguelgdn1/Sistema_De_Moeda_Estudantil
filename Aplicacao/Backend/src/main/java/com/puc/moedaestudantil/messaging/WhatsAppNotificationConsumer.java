@@ -21,7 +21,7 @@ public class WhatsAppNotificationConsumer {
     public void receber(NotificationMessage msg) {
         try {
             LOG.info("Consumindo mensagem WhatsApp: tipo={} para={}", msg.tipo(), msg.para());
-            whatsAppService.enviarCupom(msg.para(), msg.variaveis());
+            whatsAppService.enviarCupom(msg.para(), msg.variaveis(), msg.qrCodeBase64());
         } catch (Exception e) {
             LOG.error("Falha ao processar WhatsApp (tipo={}, para={}): {}",
                 msg.tipo(), msg.para(), e.getMessage());

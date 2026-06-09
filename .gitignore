@@ -12,6 +12,7 @@ Thumbs.db
 
 # Logs / arquivos temporários de debug
 *.log
+*.log.err
 erro de comp.md
 
 # Build outputs (cada subprojeto já tem seu próprio .gitignore,
@@ -24,6 +25,7 @@ build/
 node_modules/
 
 # Variáveis de ambiente (segredos locais)
+# Ignora .env e qualquer variante (.env.local, .env.bak, etc.), exceto o template.
 .env
-.env.local
+.env.*
 !.env.example
