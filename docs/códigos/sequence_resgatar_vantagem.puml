@@ -14,10 +14,13 @@ participant "QrCodeService" as Qr
 database "PostgreSQL" as DB
 participant "NotificationProducer" as Prod
 queue "RabbitMQ\nnotifications.exchange" as MQ
-participant "Consumers\n(Email / WhatsApp)" as Cons
+participant "EmailNotificationConsumer\n(@Queue email.queue)" as ECons
+participant "WhatsAppNotificationConsumer\n(@Queue whatsapp.queue)" as WCons
 
 A -> Page : seleciona vantagem e confirma resgate
+activate Page
 Page -> FeSvc : resgatar(vantagemId)
+activate FeSvc
 FeSvc -> Ctrl : POST /api/resgates\n(Bearer JWT do aluno)
 activate Ctrl
 Ctrl -> Ctrl : alunoId = getUserId(authentication)
@@ -25,41 +28,80 @@ Ctrl -> Svc : resgatar(alunoId, vantagemId)
 activate Svc
 
 Svc -> ARepo : findByIdAndDeletedAtIsNull(alunoId)
+activate ARepo
 ARepo -> DB : SELECT
+activate DB
 DB --> ARepo : Aluno
+deactivate DB
 ARepo --> Svc : Aluno
+deactivate ARepo
 Svc -> VRepo : findByIdAndDeletedAtIsNull(vantagemId)
+activate VRepo
 VRepo -> DB : SELECT
+activate DB
 DB --> VRepo : Vantagem
+deactivate DB
 VRepo --> Svc : Vantagem
+deactivate VRepo
 
 alt saldo insuficiente (saldo < custo)
     Svc --> Ctrl : SaldoInsuficienteException
+    deactivate Svc
     Ctrl --> FeSvc : 409 Conflict
+    deactivate Ctrl
+    FeSvc --> Page : erro
+    deactivate FeSvc
+    Page --> A : exibe saldo insuficiente
+    deactivate Page
 else saldo suficiente
     Svc -> Svc : aluno.saldo -= custo
     Svc -> ARepo : update(aluno)
+    activate ARepo
     ARepo -> DB : UPDATE
+    activate DB
+    deactivate DB
+    deactivate ARepo
 
-    Svc -> Gen : gerarCodigoUnico()
+    Svc -> Gen : gerar()
+    activate Gen
     note right of Svc : repete até obter código\nnão existente (até 5 tentativas)
     Gen --> Svc : código do cupom
+    deactivate Gen
 
     Svc -> TRepo : save(Transacao RESGATE_VANTAGEM\n+ código + expiração 30 dias)
+    activate TRepo
     TRepo -> DB : INSERT
+    activate DB
+    DB --> TRepo : Transacao
+    deactivate DB
     TRepo --> Svc : Transacao
+    deactivate TRepo
 
     Svc -> Qr : gerarBase64(codigo)
+    activate Qr
     Qr --> Svc : QR Code (base64)
+    deactivate Qr
 
     group Notificações (assíncrono, try/catch por destinatário)
-        Svc -> Prod : enviarEmailCupomAluno(msg + QR)
-        Prod -> MQ : publish (aluno-cupom)
-        Svc -> Prod : enviarEmailCupomEmpresa(msg)
-        Prod -> MQ : publish (empresa-cupom)
+        Svc -> Prod : enviarEmailCupomAluno(NotificationMessage)
+        activate Prod
+        Prod -> MQ : publish\n@Binding("notification.email.aluno-cupom")
+        activate MQ
+        deactivate MQ
+        deactivate Prod
+        Svc -> Prod : enviarEmailCupomEmpresa(NotificationMessage)
+        activate Prod
+        Prod -> MQ : publish\n@Binding("notification.email.empresa-cupom")
+        activate MQ
+        deactivate MQ
+        deactivate Prod
         opt aluno possui telefone
-            Svc -> Prod : enviarWhatsAppCupomAluno(msg)
-            Prod -> MQ : publish (aluno-cupom WhatsApp)
+            Svc -> Prod : enviarWhatsAppCupomAluno(NotificationMessage)
+            activate Prod
+            Prod -> MQ : publish\n@Binding("notification.whatsapp.aluno-cupom")
+            activate MQ
+            deactivate MQ
+            deactivate Prod
         end
     end
 
@@ -68,11 +110,21 @@ else saldo suficiente
     Ctrl --> FeSvc : 201 Created + ResgateResponse
     deactivate Ctrl
     FeSvc --> Page : resultado do resgate
+    deactivate FeSvc
     Page --> A : exibe cupom + código + QR
+    deactivate Page
 end
 
-== Consumo assíncrono ==
-MQ -> Cons : entrega mensagens
-Cons -> Cons : envia email ao aluno (template cupom-aluno),\nemail à empresa (template cupom-empresa)\ne WhatsApp ao aluno
+== Consumo assíncrono (email.queue) ==
+MQ -> ECons : @Queue("email.queue")\nentrega NotificationMessage (cupom-aluno / cupom-empresa)
+activate ECons
+ECons -> ECons : envia email ao aluno (template cupom-aluno)\ne email à empresa (template cupom-empresa)
+deactivate ECons
+
+== Consumo assíncrono (whatsapp.queue) ==
+MQ -> WCons : @Queue("whatsapp.queue")\nentrega NotificationMessage (cupom-aluno-wa)
+activate WCons
+WCons -> WCons : envia WhatsApp ao aluno\n(código + QR Code)
+deactivate WCons
 
 @enduml

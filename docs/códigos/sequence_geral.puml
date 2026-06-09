@@ -8,56 +8,128 @@ actor "Empresa Parceira" as E
 participant "Frontend\n(Angular)" as Fe
 participant "Backend\n(Micronaut MVC)" as Be
 database "PostgreSQL" as DB
-queue "RabbitMQ" as MQ
-participant "Email / WhatsApp" as Notif
+queue "RabbitMQ\n(notifications.exchange)" as MQ
+participant "EmailNotificationConsumer\n(@Queue email.queue)" as ECons
+participant "WhatsAppNotificationConsumer\n(@Queue whatsapp.queue)" as WCons
+participant "Email (SMTP)" as Mail
+participant "WhatsApp (API)" as WA
 
 == Autenticação (todos os atores) ==
 P -> Fe : login
 A -> Fe : login
 E -> Fe : login
+activate Fe
 Fe -> Be : POST /api/auth/login
+activate Be
 Be -> DB : valida credenciais
-Be --> Fe : JWT (token)
+activate DB
+DB --> Be : Usuario
+deactivate DB
+Be --> Fe : 200 OK + LoginResponse{token, tipoUsuario, id, nome}
+deactivate Be
+deactivate Fe
 
 == 1. Empresa cadastra vantagens ==
 E -> Fe : cadastra vantagem (nome, descrição, custo, foto)
+activate Fe
 Fe -> Be : POST /api/vantagens
+activate Be
 Be -> DB : INSERT vantagem
+activate DB
+deactivate DB
 Be --> Fe : 201 Created
+deactivate Be
+deactivate Fe
 
 == 2. Professor envia moedas ao aluno ==
 P -> Fe : envia moedas (aluno, quantidade, motivo)
+activate Fe
 Fe -> Be : POST /api/professores/{id}/distribuir
+activate Be
 Be -> Be : verifica saldo do professor
 Be -> DB : debita professor, credita aluno,\nregistra Transacao (ENVIO_MOEDA)
-Be -> MQ : publica notificações
-MQ -> Notif : email ao aluno e ao professor
+activate DB
+deactivate DB
+Be -> MQ : publish @Binding("notification.email.aluno-moeda")\npublish @Binding("notification.email.professor-moeda")
+activate MQ
+deactivate MQ
 Be --> Fe : 201 Created
+deactivate Be
+deactivate Fe
+
+MQ -> ECons : @Queue("email.queue")\nentrega NotificationMessage
+activate ECons
+ECons -> Mail : email ao aluno e ao professor
+activate Mail
+deactivate Mail
+deactivate ECons
 
 == 3. Aluno consulta extrato e catálogo ==
 A -> Fe : abre extrato
+activate Fe
 Fe -> Be : GET /api/students/{id}/extrato
+activate Be
 Be -> DB : SELECT transacoes
+activate DB
+DB --> Be : List<Transacao>
+deactivate DB
 Be --> Fe : saldo + histórico
+deactivate Be
+deactivate Fe
 
 A -> Fe : abre catálogo de vantagens
+activate Fe
 Fe -> Be : GET /api/vantagens
+activate Be
 Be -> DB : SELECT vantagens ativas
+activate DB
+DB --> Be : List<Vantagem>
+deactivate DB
 Be --> Fe : lista de vantagens
+deactivate Be
+deactivate Fe
 
 == 4. Aluno resgata (troca) vantagem ==
 A -> Fe : confirma resgate da vantagem
+activate Fe
 Fe -> Be : POST /api/resgates
+activate Be
 Be -> Be : verifica saldo do aluno
 Be -> DB : debita saldo, gera código de cupom,\nregistra Transacao (RESGATE_VANTAGEM)
-Be -> MQ : publica notificações de cupom
-MQ -> Notif : email/QR ao aluno + email à empresa
+activate DB
+deactivate DB
+Be -> MQ : publish @Binding("notification.email.aluno-cupom")\npublish @Binding("notification.email.empresa-cupom")\npublish @Binding("notification.whatsapp.aluno-cupom")
+activate MQ
+deactivate MQ
 Be --> Fe : 201 Created (cupom + QR Code)
+deactivate Be
+deactivate Fe
+
+MQ -> ECons : @Queue("email.queue")\nentrega NotificationMessage
+activate ECons
+ECons -> Mail : email/QR ao aluno + email à empresa
+activate Mail
+deactivate Mail
+deactivate ECons
+
+MQ -> WCons : @Queue("whatsapp.queue")\nentrega NotificationMessage
+activate WCons
+WCons -> WA : WhatsApp ao aluno (código + QR)
+activate WA
+deactivate WA
+deactivate WCons
 
 == 5. Empresa confere o cupom ==
 E -> Fe : valida / utiliza cupom
+activate Fe
 Fe -> Be : GET /api/cupons/{codigo}/validar\nPOST /api/cupons/{codigo}/utilizar
+activate Be
 Be -> DB : consulta e marca cupom como utilizado
-Be --> Fe : status do cupom (VÁLIDO / UTILIZADO / EXPIRADO)
+activate DB
+DB --> Be : Transacao
+deactivate DB
+Be --> Fe : CupomValidacaoResponse\n(VALIDO / UTILIZADO / EXPIRADO)
+deactivate Be
+deactivate Fe
 
 @enduml

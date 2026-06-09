@@ -16,20 +16,30 @@ activate Page
 
 ' Carrega saldo do aluno (para habilitar/desabilitar resgate)
 Page -> PSvc : getStudentProfile(alunoId)
+activate PSvc
 PSvc -> PCtrl : GET /api/students/{id}/profile
+activate PCtrl
+PCtrl -> PCtrl : requireOwnerOrAdmin(auth, id)
 PCtrl --> PSvc : AlunoResponse{saldoMoedas}
+deactivate PCtrl
 PSvc --> Page : saldo
+deactivate PSvc
 
 ' Carrega catálogo de vantagens ativas
 Page -> FeSvc : listarCatalogo()
+activate FeSvc
 FeSvc -> Ctrl : GET /api/vantagens
 activate Ctrl
 Ctrl -> Svc : listarTodas()
 activate Svc
 Svc -> VRepo : findAllByDeletedAtIsNull()
+activate VRepo
 VRepo -> DB : SELECT vantagens ativas
+activate DB
 DB --> VRepo : List<Vantagem>
+deactivate DB
 VRepo --> Svc : List<Vantagem>
+deactivate VRepo
 loop para cada vantagem
     Svc -> Svc : toResponse(vantagem)
 end
@@ -38,9 +48,10 @@ deactivate Svc
 Ctrl --> FeSvc : 200 OK + List<VantagemResponse>
 deactivate Ctrl
 FeSvc --> Page : vantagens
-deactivate Page
+deactivate FeSvc
 
 Page -> Page : aplica filtros (empresa / custo máximo)
 Page --> A : exibe catálogo com nome, descrição,\nfoto, custo e empresa
+deactivate Page
 
 @enduml

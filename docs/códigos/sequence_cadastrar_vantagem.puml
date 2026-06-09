@@ -11,7 +11,9 @@ participant "VantagemRepository" as VRepo
 database "PostgreSQL" as DB
 
 E -> Page : preenche nome, descrição,\ncusto em moedas e foto (URL)
+activate Page
 Page -> FeSvc : cadastrar({nome, descricao, custoMoedas, fotoUrl})
+activate FeSvc
 FeSvc -> Ctrl : POST /api/vantagens\n(Bearer JWT da empresa)
 activate Ctrl
 
@@ -21,26 +23,42 @@ Ctrl -> Svc : cadastrar(empresaId, request)
 activate Svc
 
 Svc -> ERepo : findByIdAndDeletedAtIsNull(empresaId)
+activate ERepo
 ERepo -> DB : SELECT
+activate DB
 DB --> ERepo : EmpresaParceira
+deactivate DB
 ERepo --> Svc : Optional<EmpresaParceira>
+deactivate ERepo
 
 alt empresa não encontrada
     Svc --> Ctrl : EmpresaNaoEncontradaException
+    deactivate Svc
     Ctrl --> FeSvc : 404 Not Found
+    deactivate Ctrl
+    FeSvc --> Page : erro
+    deactivate FeSvc
+    Page --> E : exibe mensagem de erro
+    deactivate Page
 else empresa encontrada
     Svc -> Svc : monta Vantagem\n(nome, descricao, custoMoedas, fotoUrl, empresa)
     Svc -> VRepo : save(vantagem)
+    activate VRepo
     VRepo -> DB : INSERT
+    activate DB
     DB --> VRepo : Vantagem (id)
+    deactivate DB
     VRepo --> Svc : Vantagem
+    deactivate VRepo
     Svc -> Svc : toResponse(vantagem)
     Svc --> Ctrl : VantagemResponse
     deactivate Svc
     Ctrl --> FeSvc : 201 Created + VantagemResponse
     deactivate Ctrl
     FeSvc --> Page : sucesso
+    deactivate FeSvc
     Page --> E : vantagem cadastrada
+    deactivate Page
 end
 
 @enduml

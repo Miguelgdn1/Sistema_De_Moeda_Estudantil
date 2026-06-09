@@ -12,11 +12,13 @@ participant "TransacaoRepository" as TRepo
 database "PostgreSQL" as DB
 participant "NotificationProducer" as Prod
 queue "RabbitMQ\nnotifications.exchange" as MQ
-participant "EmailNotificationConsumer" as Cons
+participant "EmailNotificationConsumer\n(@Queue email.queue)" as Cons
 participant "EmailService\n(SMTP)" as Mail
 
 P -> Page : seleciona aluno, quantidade e motivo
+activate Page
 Page -> FeSvc : distribuirMoedas(profId, {alunoId, quantidade, mensagem})
+activate FeSvc
 FeSvc -> Ctrl : POST /api/professores/{id}/distribuir
 activate Ctrl
 Ctrl -> Ctrl : requireOwnerOrAdmin(auth, id)
@@ -24,32 +26,67 @@ Ctrl -> Svc : distribuirMoedas(profId, request)
 activate Svc
 
 Svc -> PRepo : findByIdAndDeletedAtIsNull(profId)
+activate PRepo
 PRepo -> DB : SELECT
+activate DB
 DB --> PRepo : Professor
+deactivate DB
 PRepo --> Svc : Professor
+deactivate PRepo
 Svc -> ARepo : findByIdAndDeletedAtIsNull(alunoId)
+activate ARepo
 ARepo -> DB : SELECT
+activate DB
 DB --> ARepo : Aluno
+deactivate DB
 ARepo --> Svc : Aluno
+deactivate ARepo
 
 alt saldo insuficiente (saldo < quantidade)
     Svc --> Ctrl : SaldoInsuficienteException
+    deactivate Svc
     Ctrl --> FeSvc : 409 Conflict
+    deactivate Ctrl
+    FeSvc --> Page : erro
+    deactivate FeSvc
+    Page --> P : exibe saldo insuficiente
+    deactivate Page
 else saldo suficiente
     Svc -> Svc : professor.saldo -= quantidade\naluno.saldo += quantidade
     Svc -> PRepo : update(professor)
+    activate PRepo
     PRepo -> DB : UPDATE
+    activate DB
+    deactivate DB
+    deactivate PRepo
     Svc -> ARepo : update(aluno)
+    activate ARepo
     ARepo -> DB : UPDATE
+    activate DB
+    deactivate DB
+    deactivate ARepo
     Svc -> TRepo : save(Transacao ENVIO_MOEDA)
+    activate TRepo
     TRepo -> DB : INSERT
+    activate DB
+    DB --> TRepo : Transacao
+    deactivate DB
     TRepo --> Svc : Transacao
+    deactivate TRepo
 
     group Notificações (assíncrono, try/catch por destinatário)
-        Svc -> Prod : enviarEmailMoedaAluno(msg)
-        Prod -> MQ : publish (routing aluno-moeda)
-        Svc -> Prod : enviarEmailMoedaProfessor(msg)
-        Prod -> MQ : publish (routing professor-moeda)
+        Svc -> Prod : enviarEmailMoedaAluno(NotificationMessage)
+        activate Prod
+        Prod -> MQ : publish\n@Binding("notification.email.aluno-moeda")
+        activate MQ
+        deactivate MQ
+        deactivate Prod
+        Svc -> Prod : enviarEmailMoedaProfessor(NotificationMessage)
+        activate Prod
+        Prod -> MQ : publish\n@Binding("notification.email.professor-moeda")
+        activate MQ
+        deactivate MQ
+        deactivate Prod
     end
 
     Svc --> Ctrl : TransacaoResponse
@@ -57,12 +94,18 @@ else saldo suficiente
     Ctrl --> FeSvc : 201 Created + TransacaoResponse
     deactivate Ctrl
     FeSvc --> Page : sucesso
+    deactivate FeSvc
     Page --> P : confirma envio
+    deactivate Page
 end
 
-== Consumo assíncrono das mensagens ==
-MQ -> Cons : entrega NotificationMessage
-Cons -> Mail : envia email (template moeda-recebida-aluno / moeda-enviada-professor)
+== Consumo assíncrono (email.queue) ==
+MQ -> Cons : @Queue("email.queue")\nentrega NotificationMessage
+activate Cons
+Cons -> Mail : enviarTemplate(para, assunto,\ntemplate moeda-recebida-aluno /\nmoeda-enviada-professor, variaveis)
+activate Mail
 Mail --> Cons : enviado
+deactivate Mail
+deactivate Cons
 
 @enduml

@@ -14,7 +14,9 @@ end box
 database "PostgreSQL" as DB
 
 U -> Page : abre tela de extrato
+activate Page
 Page -> FeSvc : getExtrato(id)
+activate FeSvc
 
 alt Aluno
     FeSvc -> Ctrl : GET /api/students/{id}/extrato
@@ -24,25 +26,33 @@ end
 
 activate Ctrl
 Ctrl -> Ctrl : requireOwnerOrAdmin(auth, id)
-Ctrl -> Svc : obterExtrato(id)
+Ctrl -> Svc : obterExtrato(id) / listarExtrato(id)
 activate Svc
 
 Svc -> Svc : carregar(id) (valida existência)
 Svc -> TRepo : listarPor(Aluno|Professor)(id)
+activate TRepo
 TRepo -> DB : SELECT transacoes
+activate DB
 DB --> TRepo : List<Transacao>
+deactivate DB
 TRepo --> Svc : List<Transacao>
+deactivate TRepo
 
 loop para cada transação
     Svc -> Mapper : toResponse(transacao)
+    activate Mapper
     Mapper --> Svc : TransacaoResponse
+    deactivate Mapper
 end
 
-Svc --> Ctrl : ExtratoResponse{saldo, transacoes}
+Svc --> Ctrl : ExtratoResponse{saldo, transacoes}\n/ List<TransacaoResponse>
 deactivate Svc
 Ctrl --> FeSvc : 200 OK + ExtratoResponse
 deactivate Ctrl
 FeSvc --> Page : saldo + lista de transações
+deactivate FeSvc
 Page --> U : exibe saldo e histórico
+deactivate Page
 
 @enduml

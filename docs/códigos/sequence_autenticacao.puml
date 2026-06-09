@@ -12,36 +12,60 @@ participant "JwtService" as Jwt
 database "PostgreSQL" as DB
 
 U -> Page : informa email e senha
+activate Page
 Page -> FeSvc : login(email, senha)
+activate FeSvc
 FeSvc -> Ctrl : POST /api/auth/login\n{email, senha}
 activate Ctrl
-Ctrl -> Svc : autenticar(request)
+Ctrl -> Svc : login(request)
 activate Svc
 
 Svc -> Repo : findByEmailAndDeletedAtIsNull(email)
+activate Repo
 Repo -> DB : SELECT
+activate DB
 DB --> Repo : Usuario
+deactivate DB
 Repo --> Svc : Optional<Usuario>
+deactivate Repo
 
 alt usuário não encontrado
     Svc --> Ctrl : CredenciaisInvalidasException
+    deactivate Svc
     Ctrl --> FeSvc : 401 Unauthorized
+    deactivate Ctrl
+    FeSvc --> Page : erro de autenticação
+    deactivate FeSvc
+    Page --> U : exibe mensagem de erro
+    deactivate Page
 else encontrado
     Svc -> Pwd : matches(senha, senhaHash)
+    activate Pwd
     Pwd --> Svc : boolean
+    deactivate Pwd
     alt senha inválida
         Svc --> Ctrl : CredenciaisInvalidasException
+        deactivate Svc
         Ctrl --> FeSvc : 401 Unauthorized
+        deactivate Ctrl
+        FeSvc --> Page : erro de autenticação
+        deactivate FeSvc
+        Page --> U : exibe mensagem de erro
+        deactivate Page
     else senha válida
-        Svc -> Jwt : gerarToken(usuario)
+        Svc -> Jwt : gerarToken(id, email, tipoUsuario)
+        activate Jwt
         Jwt --> Svc : JWT
-        Svc --> Ctrl : LoginResponse{token, tipoUsuario, id}
+        deactivate Jwt
+        Svc --> Ctrl : LoginResponse{token, tipoUsuario, id, nome}
         deactivate Svc
         Ctrl --> FeSvc : 200 OK + LoginResponse
         deactivate Ctrl
         FeSvc -> FeSvc : armazena token (localStorage)
         FeSvc --> Page : usuário autenticado
+        deactivate FeSvc
         Page --> U : redireciona ao painel
+        deactivate Page
     end
 end
 
