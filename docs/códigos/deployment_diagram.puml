@@ -1,0 +1,123 @@
+@startuml
+
+title Diagrama de Implantação — Sistema de Moeda Estudantil
+
+' ===== Estilos =====
+skinparam nodeBackgroundColor #f8fafc
+skinparam nodeStereotypeFontColor #6b7280
+skinparam artifactBackgroundColor #e0f2fe
+skinparam databaseBackgroundColor #fef3c7
+skinparam componentBackgroundColor #ecfdf5
+
+' ===== Nó: Cliente =====
+node "<<device>>\nDispositivo do Usuário" as cliente {
+    artifact "Navegador Web" as nav {
+        component "Angular SPA\n(HTML/CSS/JS)" as spa
+    }
+}
+
+' ===== Nó: Vercel (CDN) =====
+node "<<cloud>>\nVercel (CDN)" as vercel {
+    artifact "Frontend Build\n(ng build --prod)" as frontBuild {
+        component "Assets Estáticos\n(index.html, main.js,\npolyfills.js, styles.css)" as assets
+    }
+    note bottom of vercel
+      vercel.json redireciona
+      todas as rotas para index.html
+      (SPA routing).
+    end note
+}
+
+' ===== Nó: Render (Backend) =====
+node "<<cloud>>\nRender (Web Service)" as render {
+    artifact "Backend JAR\n(MoedaEstudantil-0.1.jar)" as jar {
+        component "Micronaut 4.10\n(Java 21)" as micronaut
+        component "Micronaut Security\n(JWT Bearer)" as security
+        component "Micronaut Data JPA\n+ Hibernate" as jpa
+        component "Micronaut RabbitMQ\n(Producer + Consumer)" as rabbitClient
+        component "SmtpEmailService\n(Jakarta Mail)" as mailClient
+        component "QrCodeService\n(ZXing 3.5.3)" as zxing
+        component "Flyway\n(Migrations)" as flyway
+    }
+}
+
+' ===== Nó: RabbitMQ =====
+node "<<cloud>>\nCloudAMQP / Render" as rabbitNode {
+    component "RabbitMQ 3" as rabbit {
+        queue "email.queue" as emailQ
+        queue "whatsapp.queue" as waQ
+        queue "notifications.dlq" as dlq
+        component "notifications.exchange\n(topic)" as exchange
+    }
+}
+
+' ===== Nó: PostgreSQL =====
+node "<<cloud>>\nNeon / Render PostgreSQL" as pgNode {
+    database "moedaestudantil" as db {
+        storage "usuario\naluno\nprofessor\nempresa_parceira\ninstituicao\nvantagem\ntransacao\nflyway_schema_history" as tabelas
+    }
+}
+
+' ===== Nó: Serviços Externos =====
+cloud "<<external>>\nServidor SMTP" as smtpServer {
+    component "Gmail / Mailtrap\n(porta 587)" as smtpComp
+}
+
+cloud "<<external>>\nEvolution API\n(opcional, self-hosted)" as evolutionNode {
+    component "WhatsApp Gateway\n(API não oficial)" as waGateway
+}
+
+' ===== Conexões =====
+
+' Cliente ↔ Vercel
+nav --> frontBuild : HTTPS\n(GET assets)
+
+' SPA → Backend
+spa --> micronaut : HTTPS/JSON\n(REST API, porta 443)\nAuthorization: Bearer <JWT>
+
+' Backend → PostgreSQL
+jpa --> db : JDBC sobre SSL\n(porta 5432)
+flyway --> db : Migrations DDL
+
+' Backend ↔ RabbitMQ
+rabbitClient --> exchange : AMQP/TLS\n(publica mensagens)
+exchange --> emailQ : routing key:\nnotification.email.*
+exchange --> waQ : routing key:\nnotification.whatsapp.*
+emailQ --> rabbitClient : consume\n(EmailNotificationConsumer)
+waQ --> rabbitClient : consume\n(WhatsAppNotificationConsumer)
+
+' Backend → SMTP
+mailClient --> smtpComp : SMTP/STARTTLS\n(porta 587)
+
+' Backend → WhatsApp (opcional)
+rabbitClient ..> waGateway : HTTP POST\n(porta 8081, opcional)
+
+' Falhas → DLQ
+emailQ .right.> dlq : reject\n(falha no consumer)
+
+' ===== Notas =====
+note right of render
+  **Deploy:**
+  Dockerfile multi-stage
+  (Maven build → JRE 21 slim)
+  
+  **Variáveis de ambiente:**
+  DB_URL, JWT_SECRET,
+  RABBITMQ_URI, MAIL_*,
+  CORS_ALLOWED_ORIGIN
+end note
+
+note right of pgNode
+  **Schema gerenciado por Flyway**
+  hbm2ddl.auto = validate
+  (não cria/altera tabelas)
+end note
+
+note bottom of rabbitNode
+  **Exchange tópica** roteia por
+  routing key para filas dedicadas.
+  Mensagens com falha vão para
+  notifications.dlq (Dead Letter Queue).
+end note
+
+@enduml

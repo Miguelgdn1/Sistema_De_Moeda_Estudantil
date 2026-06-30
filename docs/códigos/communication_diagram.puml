@@ -1,0 +1,112 @@
+@startuml
+
+title Diagrama de Comunicação — Resgate de Vantagem com Envio de Cupom por E-mail (QR Code)
+
+skinparam objectBorderColor #555555
+skinparam objectBackgroundColor #FEFEFE
+skinparam objectFontSize 12
+skinparam noteFontSize 10
+skinparam packageFontSize 13
+skinparam packageFontStyle bold
+skinparam defaultTextAlignment center
+skinparam wrapWidth 220
+
+top to bottom direction
+
+' ===== Camada de Apresentação =====
+package "Camada de Apresentação" as apresentacao #E8EAF6 {
+    object ":Navegador" as browser
+    object ":ResgateController" as controller
+}
+
+browser -right-> controller : 1: POST /api/resgates\n{vantagemId}
+controller -left-> browser : 1r: HTTP 200\n{ResgateResponse}
+
+' ===== Camada de Negócio =====
+package "Camada de Negócio" as negocio #E8F5E9 {
+    object ":ResgateService" as service
+    object ":CodigoCupomGenerator" as cupomGen
+    object ":QrCodeService" as qrService
+}
+
+controller --> service : 1.1: resgatar(alunoId, vantagemId)
+service --> controller : 1.1r: ResgateResponse\n(codigo, qrBase64, saldo)
+
+service -left-> cupomGen : 1.1.4: gerar()
+cupomGen -right-> service : 1.1.4r: codigoCupom
+
+service -right-> qrService : 1.1.7: gerarBase64(codigoCupom)
+qrService -left-> service : 1.1.7r: qrCodeBase64
+
+' ===== Camada de Persistência =====
+package "Camada de Persistência" as persistencia #FFF9C4 {
+    object ":AlunoRepository" as alunoRepo
+    object ":VantagemRepository" as vantagemRepo
+    object ":TransacaoRepository" as transacaoRepo
+}
+
+service --> alunoRepo : 1.1.1: findByIdAndDeletedAtIsNull(alunoId)\n1.1.3: update(aluno) [saldo -= custo]
+alunoRepo --> service : 1.1.1r: Aluno
+
+service --> vantagemRepo : 1.1.2: findByIdAndDeletedAtIsNull(vantagemId)
+vantagemRepo --> service : 1.1.2r: Vantagem
+
+service --> transacaoRepo : 1.1.5: findByCodigoCupom [unicidade]\n1.1.6: save(transacao)
+transacaoRepo --> service : 1.1.6r: Transacao
+
+' ===== Camada de Mensageria (publicação) =====
+package "Camada de Mensageria" as mensageria #FCE4EC {
+    object ":NotificationProducer" as producer
+    object ":RabbitMQ\n(notifications.exchange)" as rabbit
+    object ":EmailNotificationConsumer" as consumer
+}
+
+service --> producer : 1.1.8a: enviarEmailCupomAluno(msg)\n1.1.8b: enviarEmailCupomEmpresa(msg)\n1.1.8c: enviarWhatsAppCupomAluno(msg)
+
+producer --> rabbit : 1.1.8a.1: publish (routing: notification.email.aluno-cupom)\n1.1.8b.1: publish (routing: notification.email.empresa-cupom)\n1.1.8c.1: publish (routing: notification.whatsapp.aluno-cupom)
+
+rabbit --> consumer : 2: receber(msg)\n[email.queue — assíncrono]
+
+' ===== Camada de Integração (E-mail) =====
+package "Camada de Integração (E-mail)" as integracao #FFF3E0 {
+    object ":EmailTemplateRenderer" as renderer
+    object ":SmtpEmailService" as smtp
+    object ":ServidorSMTP\n(Gmail / Mailtrap)" as smtpServer
+}
+
+consumer --> renderer : 2.1: render(template, variaveis)
+renderer --> consumer : 2.1r: corpoHtml
+
+consumer --> smtp : 2.2: enviarComAnexo(para, assunto,\ncorpoHtml, qrPng,\n"cupom-qr.png", "cupom-qr")
+
+smtp --> smtpServer : 2.2.1: SMTP/STARTTLS\n[MimeMessage multipart/related\ncom QR Code inline]
+
+' ===== Notas =====
+
+note right of service
+  **Validação:** saldo >= custo.
+  Debita saldo do aluno.
+  Gera código único + QR Code.
+
+  **Publicação assíncrona:**
+  3 mensagens independentes
+  via RabbitMQ (exchange tópica).
+end note
+
+note right of consumer
+  Se **qrCodeBase64** presente:
+  decodifica Base64 → byte[]
+  e anexa como imagem inline
+  (Content-ID: cupom-qr).
+end note
+
+note right of smtpServer
+  **Resultado:**
+  E-mail chega na caixa do
+  aluno com QR Code inline
+  e código do cupom.
+  E-mail para empresa com
+  dados do resgate.
+end note
+
+@enduml
